@@ -22,9 +22,26 @@ fifo="/tmp/lemonbar"
 [ -e "${fifo}" ] && rm -Rf "${fifo}"
 mkfifo "${fifo}"
 
+
+acpi_entry() {
+	while read -r line ; do
+		case $line in
+			ac_adapter)
+				echo 'b' > "${fifo}"
+			;;
+			battery)
+				echo 'b' > "${fifo}"
+			;;
+
+		esac &
+	done
+}
+
+
 # Spy window changement
 xprop -spy -root _NET_ACTIVE_WINDOW | sed -un 's/.*/w/p' > "${fifo}" &
 #w_ID=$(xprop -root _NET_ACTIVE_WINDOW | sed -un 's/.* //p')
+acpi_listen | sed -u 's/ .*//' | acpi_entry &
 
 # Get program title
 window() {
@@ -316,11 +333,6 @@ while :; do
 	sleep 10
 done &
 
-while :; do
-	echo "b" > "${fifo}"
-
-	sleep 5
-done &
 
 window
 battery
@@ -350,7 +362,7 @@ parser() {
 				window
 			;;
 
-			b)
+			b)  sleep 0.2
 				battery
 			;;
 
@@ -378,7 +390,8 @@ parser() {
 				space
 			;;
 
-			defaut)
+			*)
+				w_title="Erreur"
 			;;
 		esac
 		echo -e "%{c}%{F${white} B${black}} ${w_title} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c}  %{B- F-}"
