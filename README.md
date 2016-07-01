@@ -1,0 +1,2 @@
+# .config
+All config files
