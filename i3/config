@@ -228,28 +228,28 @@ bar {
 assign [class="Conky"] $ws0
 
 exec numlockx on
-exec_always feh --bg-scale /home/geometrum/Images/background.png
+exec_always feh --bg-scale /home/geometrum/images/background.png
 exec --no-startup-id twmnd
 
 # exec --no-startup-id /home/geometrum/lock.sh
-exec --no-startup-id i3lock -i /home/geometrum/Images/background.png
+exec --no-startup-id i3lock -i /home/geometrum/images/background.png
 
 exec --no-startup-id sudo pacman -Rns $(pacman -Qtdq) --noconfirm &
 exec --no-startup-id sudo pacman -Syu --noconfirm &
 exec --no-startup-id sudo pacman -Sc --noconfirm &
 
-exec --no-startup-id i3-msg 'workspace $ws1; exec firefox-developer; workspace $ws2; exec terminology; workspace $ws0; exec conky'
+exec --no-startup-id i3-msg 'workspace $ws2; exec terminology; workspace $ws0; exec conky'
 
 exec "twmnc \\"Bienvenu, $USER\\""
 
-bindsym Print exec scrot ~/Images/screenshots
+bindsym Print exec scrot ~/images/screenshots
 
 bindsym XF86AudioMute exec pulsemixer --toggle-mute && echo 'v' > /tmp/lemonbar
 bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -5 && echo 'v' > /tmp/lemonbar
 bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +5 && echo 'v' > /tmp/lemonbar
 
-bindsym XF86MonBrightnessUp exec sudo ~/backlight.sh + && echo 'l' > /tmp/lemonbar
-bindsym XF86MonBrightnessDown exec sudo ~/backlight.sh - && echo 'l' > /tmp/lemonbar
+bindsym XF86MonBrightnessUp exec sudo ~/scripts/backlight.sh + && echo 'l' > /tmp/lemonbar
+bindsym XF86MonBrightnessDown exec sudo ~/scripts/backlight.sh - && echo 'l' > /tmp/lemonbar
 
 exec touchegg &
 
