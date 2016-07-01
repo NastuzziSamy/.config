@@ -1,0 +1,259 @@
+# Please see http://i3wm.org/docs/userguide.html for a complete reference!
+
+# Touche Windows
+set $mod Mod4
+
+# Font for window titles. Will also be used by the bar unless a different font
+# is used in the bar {} block below.
+#font pango:monospace 8
+
+# This font is widely installed, provides lots of unicode glyphs, right-to-left
+# text rendering and scalability on retina/hidpi displays (thanks to pango).
+font pango:System San Francisco Display 10
+
+# Before i3 v4.8, we used to recommend this one as the default:
+# font -misc-fixed-medium-r-normal--13-120-75-75-C-70-iso10646-1
+# The font above is very space-efficient, that is, it looks good, sharp and
+# clear in small sizes. However, its unicode glyph coverage is limited, the old
+# X core fonts rendering does not support right-to-left and this being a bitmap
+# font, it doesn’t scale on retina/hidpi displays.
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# start a terminal
+bindsym $mod+BackSpace exec terminology
+
+# kill focused window
+bindsym $mod+Delete kill
+bindcode $mod+64 kill
+
+# start dmenu (a program launcher)
+bindsym $mod+Return exec dmenu_run
+
+# change focus
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# move focused window
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# split in horizontal orientation
+bindsym $mod+h split h
+
+# split in vertical orientation
+bindsym $mod+v split v
+
+# enter fullscreen mode for the focused container
+bindsym $mod+f fullscreen toggle
+
+# change container layout (stacked, tabbed, toggle split)
+bindsym $mod+a layout stacking
+bindsym $mod+z layout tabbed
+bindsym $mod+e layout toggle split
+
+# toggle tiling / floating
+bindsym $mod+space floating toggle
+
+# change focus between tiling / floating windows
+bindsym $mod+Tab focus mode_toggle
+
+# focus the parent container
+bindsym $mod+q focus parent
+
+# focus the child container
+#bindsym $mod+w focus child
+
+# workspaces
+set $ws0 "0 "
+set $ws1 "1 "
+set $ws2 "2 "
+set $ws3 "3 "
+set $ws4 "4 "
+set $ws5 "5 "
+set $ws6 "6 "
+set $ws7 "7 "
+set $ws8 "8 "
+set $ws9 "9 "
+set $ws+ "+ "
+
+set $fifo "/tmp/lemonbar"
+workspace $ws+ output HDMI-1
+
+# switch to workspace
+bindsym $mod+ampersand workspace $ws1 , exec echo 's' > $fifo
+bindsym $mod+eacute workspace $ws2 , exec echo 's' > $fifo
+bindsym $mod+quotedbl workspace $ws3 , exec echo 's' > $fifo
+bindsym $mod+apostrophe workspace $ws4 , exec echo 's' > $fifo
+bindsym $mod+parenleft workspace $ws5 , exec echo 's' > $fifo
+bindsym $mod+minus workspace $ws6 , exec echo 's' > $fifo
+bindsym $mod+egrave workspace $ws7 , exec echo 's' > $fifo
+bindsym $mod+underscore workspace $ws8 , exec echo 's' > $fifo
+bindsym $mod+ccedilla workspace $ws9 , exec echo 's' > $fifo
+bindsym $mod+agrave workspace $ws0 , exec echo 's' > $fifo
+
+# switch to workspace
+bindsym $mod+KP_1 workspace $ws1 , exec echo 's' > $fifo
+bindsym $mod+KP_2 workspace $ws2 , exec echo 's' > $fifo
+bindsym $mod+KP_3 workspace $ws3 , exec echo 's' > $fifo
+bindsym $mod+KP_4 workspace $ws4 , exec echo 's' > $fifo
+bindsym $mod+KP_5 workspace $ws5 , exec echo 's' > $fifo
+bindsym $mod+KP_6 workspace $ws6 , exec echo 's' > $fifo
+bindsym $mod+KP_7 workspace $ws7 , exec echo 's' > $fifo
+bindsym $mod+KP_8 workspace $ws8 , exec echo 's' > $fifo
+bindsym $mod+KP_9 workspace $ws9 , exec echo 's' > $fifo
+bindsym $mod+KP_0 workspace $ws0 , exec echo 's' > $fifo
+bindcode $mod+86 workspace $ws+ , exec echo 's' > $fifo
+
+# move focused container to workspace
+bindsym $mod+Shift+ampersand move container to workspace $ws1 , exec echo 's' > $fifo
+bindsym $mod+Shift+eacute move container to workspace $ws2 , exec echo 's' > $fifo
+bindsym $mod+Shift+quotedbl move container to workspace $ws3 , exec echo 's' > $fifo
+bindsym $mod+Shift+apostrophe move container to workspace $ws4 , exec echo 's' > $fifo
+bindsym $mod+Shift+parenleft move container to workspace $ws5 , exec echo 's' > $fifo
+bindsym $mod+Shift+minus move container to workspace $ws6 , exec echo 's' > $fifo
+bindsym $mod+Shift+egrave move container to workspace $ws7 , exec echo 's' > $fifo
+bindsym $mod+Shift+underscore move container to workspace $ws8 , exec echo 's' > $fifo
+bindsym $mod+Shift+ccedilla move container to workspace $ws9 , exec echo 's' > $fifo
+bindsym $mod+Shift+agrave move container to workspace $ws0 , exec echo 's' > $fifo
+
+# move focused container to workspace
+bindsym $mod+Shift+KP_1 move container to workspace $ws1 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_2 move container to workspace $ws2 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_3 move container to workspace $ws3 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_4 move container to workspace $ws4 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_5 move container to workspace $ws5 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_6 move container to workspace $ws6 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_7 move container to workspace $ws7 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_8 move container to workspace $ws8 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_9 move container to workspace $ws9 , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_0 move container to workspace $ws0 , exec echo 's' > $fifo
+bindcode $mod+Shift+86 move container to workspace $ws+ , exec echo 's' > $fifo
+
+
+
+# reload the configuration file
+#bindsym $mod+Tab reload 
+
+# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+bindsym $mod+Shift+Tab restart
+
+mode "Que voulez-vous faire ?" {
+
+    bindsym space exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
+    bindsym BackSpace exec i3-msg exit, mode "default", exec twmnc --id 0 --remote hide
+    bindsym Tab exec i3lock-fancy, exec systemctl suspend, mode "default", exec twmnc --id 0 --remote hide
+    bindsym $mod+Return exec reboot, mode "default", exec twmnc --id 0 --remote hide
+    bindsym Return exec poweroff, mode "default", exec twmnc --id 0 --remote hide
+
+    # back to normal: Escape
+    bindsym Escape mode "default", exec twmnc --id 0 --remote hide
+}
+# launch stop menu
+bindcode $mod+37 exec oblogout
+
+
+mode "Etes vous-sûr de vouloir vérouiller votre ordinateur ?" {
+    bindsym Return exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
+    bindsym $mod+Pause exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
+    bindsym $mod+Home exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
+    bindsym Escape mode "default", exec twmnc --id 0 --remote hide
+}
+bindsym $mod+Pause exec twmnc --id 0 -t "Etes vous-sûr de vouloir vérouiller votre ordinateur ?" -c "Entrée pour vérouiller" -d 60000, mode "Etes vous-sûr de vouloir vérouiller votre ordinateur ?"
+bindsym $mod+Home exec twmnc --id 0 -t "Etes vous-sûr de vouloir vérouiller votre ordinateur ?" -c "Entrée pour vérouiller" -d 60000, mode "Etes vous-sûr de vouloir vérouiller votre ordinateur ?"
+
+
+mode "Etes vous-sûr de vouloir éteindre votre ordinateur ?" {
+    bindsym Return exec poweroff, mode "default", exec twmnc --id 0 --remote hide
+    bindsym $mod+Pause exec poweroff, mode "default", exec twmnc --id 0 --remote hide
+    bindsym $mod+End exec poweroff, mode "default", exec twmnc --id 0 --remote hide
+    bindsym Escape mode "default", exec twmnc --id 0 --remote hide
+}
+bindsym $mod+End exec twmnc --id 0 -t "Etes vous-sûr de vouloir éteindre votre ordinateur ?" -c "Entrée pour éteindre" -d 60000, mode "Etes vous-sûr de vouloir éteindre votre ordinateur ?"
+
+
+# exit i3 (logs you out of your X session)
+bindsym $mod+Escape exec "i3-nagbar -t warning -m 'Voulez-vous réellement quitter i3 ? Vous serez redirigé vers lightdm' -b 'Oui, quitter' 'i3-msg exit'"
+
+
+
+# resize window (you can also use the mouse for that)
+mode "resize" {
+        # These bindings trigger as soon as you enter the resize mode
+        # Pressing left will shrink the window’s width.
+        # Pressing right will grow the window’s width.
+        # Pressing up will shrink the window’s height.
+        # Pressing down will grow the window’s height.
+
+        # same bindings, but for the arrow keys
+        bindsym Left resize shrink width 10 px or 10 ppt
+        bindsym Down resize grow height 10 px or 10 ppt
+        bindsym Up resize shrink height 10 px or 10 ppt
+        bindsym Right resize grow width 10 px or 10 ppt
+
+        # back to normal: Enter or Escape
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+}
+
+bindsym $mod+r mode "resize"
+
+# Start i3bar to display a workspace bar (plus the system information i3status
+# finds out, if available)
+bar {
+    #i3bar_command ~/.config/i3/lemonbar/i3_lemonbar.sh
+    i3bar_command ~/.config/lemonbar/lemonbar.sh
+    #status_command    i3status
+    #position          bottom
+    #workspace_buttons yes
+    #tray_output       none
+
+    #colors {
+    #    background #000000
+    #    statusline #ffffff
+
+    #    focused_workspace  #ffffff #285577
+    #    active_workspace   #ffffff #333333
+    #    inactive_workspace #888888 #222222
+    #    urgent_workspace   #ffffff #900000
+    #}
+}
+
+
+assign [class="Conky"] $ws0
+
+exec numlockx on
+exec_always feh --bg-scale /home/geometrum/Images/background.png
+exec --no-startup-id twmnd
+
+# exec --no-startup-id /home/geometrum/lock.sh
+exec --no-startup-id i3lock -i /home/geometrum/Images/background.png
+
+exec --no-startup-id sudo pacman -Rns $(pacman -Qtdq) --noconfirm &
+exec --no-startup-id sudo pacman -Syu --noconfirm &
+exec --no-startup-id sudo pacman -Sc --noconfirm &
+
+exec --no-startup-id i3-msg 'workspace $ws1; exec firefox-developer; workspace $ws2; exec terminology; workspace $ws0; exec conky'
+
+exec "twmnc \\"Bienvenu, $USER\\""
+
+bindsym Print exec scrot ~/Images/screenshots
+
+bindsym XF86AudioMute exec pulsemixer --toggle-mute && echo 'v' > /tmp/lemonbar
+bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -5 && echo 'v' > /tmp/lemonbar
+bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +5 && echo 'v' > /tmp/lemonbar
+
+bindsym XF86MonBrightnessUp exec sudo ~/backlight.sh + && echo 'l' > /tmp/lemonbar
+bindsym XF86MonBrightnessDown exec sudo ~/backlight.sh - && echo 'l' > /tmp/lemonbar
+
+exec touchegg &
+
+for_window [class="Oblogout"] fullscreen
+
+exec compton -f 
+for_window [class="^.*"] border pixel 1
