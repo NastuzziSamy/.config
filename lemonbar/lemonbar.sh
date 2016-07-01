@@ -26,11 +26,41 @@ mkfifo "${fifo}"
 acpi_entry() {
 	while read -r line ; do
 		case $line in
+			button/*)
+				if [ $line == "button/wlan" ]; then
+					echo 'n' > "${fifo}"
+				else
+					echo 'v' > "${fifo}"
+				fi
+			;;
+
+			video*)
+				echo 'l' > "${fifo}"
+			;;
+
 			ac_adapter)
-				echo 'b' > "${fifo}"
+				echo 'b_Discharging' > "${fifo}"
 			;;
 			battery)
-				echo 'b' > "${fifo}"
+				echo 'b_Charging' > "${fifo}"
+			;;
+
+		esac &
+	done
+}
+
+dmesg_entry() {
+	while read -r line ; do
+		case $line in
+			$wifi*)
+				echo 'n' > "${fifo}"
+			;;
+			r8189) # Correspond to ethernet link
+				echo 'n' > "${fifo}"
+			;;
+
+			Restarting) # Reload everything when the system restart
+				echo 'reload' > "${fifo}"
 			;;
 
 		esac &
@@ -43,6 +73,10 @@ xprop -spy -root _NET_ACTIVE_WINDOW | sed -un 's/.*/w/p' > "${fifo}" &
 #w_ID=$(xprop -root _NET_ACTIVE_WINDOW | sed -un 's/.* //p')
 acpi_listen | sed -u 's/ .*//' | acpi_entry &
 
+#dmesg -wt | sed -u 's/ .*//' | sed -u "s/.*${wifi}.*by.*/n/" | dmesg_entry &
+
+b_status=$(cat /sys/class/power_supply/BAT0/status)
+
 # Get program title
 window() {
 	#w_title=$(xprop -id $w_ID WM_NAME | sed 's/.*= "//' | sed 's/"//')
@@ -53,13 +87,12 @@ window() {
 clock() {
 	c_date=$(date +'%a %d %b' | sed -e "s/\b\(.\)/\u\1/g")
 	c_time=$(date +'%H:%M')
-	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${black}}${left_light}%{B${orange} F${yellow}}${left}%{B${yellow} F${black}} ${time_icon} ${c_time}"
+	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${black}}${left_light}%{B${orange} F${white}}${left}%{B${white} F${black}} ${time_icon} ${c_time}"
 }
 
 # Get battery
 battery() {
 	b_level=$(cat /sys/class/power_supply/BAT0/capacity)
-	b_status=$(cat /sys/class/power_supply/BAT0/status)
 	
 	if [ $b_level -le 20 ]; then
 		b_bcolor="${red}"
@@ -76,9 +109,18 @@ battery() {
 	elif [ $b_level -lt 100 ]; then
 		b_bcolor="${blue}"
 		b_fcolor="${black}"
+	else
+		b_bcolor="${violet}"
+		b_fcolor="${white}"
 	fi
 
-	if [ $b_level -le 25 ]; then
+	if [ $b_status == "Charging" ]; then
+		b_icon="${charging_icon}"
+	elif [ $b_status == "Unknown" ]; then
+		b_icon="${warning_icon}"
+		b_bcolor="${black}"
+		b_fcolor="${red}"
+	elif [ $b_level -le 25 ]; then
 		b_icon="${battery_0_icon}"
 	elif [ $b_level -le 50 ]; then
 		b_icon="${battery_25_icon}"
@@ -86,17 +128,8 @@ battery() {
 		b_icon="${battery_50_icon}"
 	elif [ $b_level -lt 100 ]; then
 		b_icon="${battery_75_icon}"
-	fi
-
-	if [ $b_status == "Full" ]; then
+	else
 		b_icon="${battery_full_icon}"
-		b_bcolor="${violet}"
-		b_fcolor="${white}"
-	elif [ $b_status == "Charging" ]; then
-		b_icon="${charging_icon}"
-	elif [ $b_status == "Unknown" ]; then
-		b_bcolor="${red}"
-		b_fcolor="${white}"
 	fi
 
 	b="F${b_bcolor}}${left}%{F${b_fcolor} B${b_bcolor}} ${b_icon} ${b_level}% %{F${b_fcolor}}${left_light}%{B${b_bcolor}"
@@ -104,80 +137,84 @@ battery() {
 
 # Get network
 network() {
-	ethernet_icon_status=$(nmcli d | grep "ethernet" | awk '{ print $3 }')
-	wifi_icon_status=$(nmcli d | grep "wifi" | awk '{ print $3 }')
-	wifi_icon_ESSID=$(nmcli d | grep "wifi" | awk '{ print $NF }')
-	wifi_icon_quality=0
-	ethernet_icon_disconnected="0"
+	ethernet_status=$(nmcli d | grep "ethernet" | awk '{ print $3 }')
+	wifi_status=$(nmcli d | grep "wifi" | awk '{ print $3 }')
+	wifi_ESSID=$(nmcli d | grep "wifi" | awk '{ print $NF }')
+	wifi_quality=0
+	ethernet_disconnected="0"
 	n_bcolor="${red}"
 	n_fcolor="${black}"
 	n_icon=""
 	n_ping=""
 
-	if [ $wifi_icon_status == "indisponible" ]; then
+	if [ $wifi_status == "indisponible" ]; then
 		n_bcolor="${white}"
 		n_icon="${airplane_icon}"
-		if [ $ethernet_icon_status == "déconnecté" ]; then
+		if [ $ethernet_status == "déconnecté" ]; then
 			nmcli dev connect "${ethernet}" &
 		fi
 	
-	elif [ $wifi_icon_status == "déconnecté" ]; then
+	elif [ $wifi_status == "déconnecté" ]; then
 		n_bcolor="${black}"
 		n_fcolor="${white}"
-		n_icon="${disconnected_icon}"
-		if [ $ethernet_icon_status == "déconnecté" ]; then
+		if [ $ethernet_status != "connecté" ]; then
+			n_icon="${disconnected_icon}"
+		fi
+
+		if [ $ethernet_status == "déconnecté" ]; then
 			nmcli dev connect "${ethernet}" &
 		fi
 
-	elif [ $wifi_icon_status == "connexion" ]; then
+	elif [ $wifi_status == "connexion" ]; then
 		n_bcolor="${orange}"
 		n_icon="${wifi_icon}"
-		if [ $ethernet_icon_status == "connecté" ]; then
+		if [ $ethernet_status == "connecté" ]; then
 			nmcli dev disconnect "${ethernet}" &
 		fi
-		ethernet_icon_disconnected="1"	
+		ethernet_disconnected="1"	
 
-	elif [ $wifi_icon_status == "connecté" ]; then
+	elif [ $wifi_status == "connecté" ]; then
 		n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
 		n_icon="${wifi_icon}"
-		wifi_icon_quality=$((100*$(iwconfig "${wifi}" | grep "Link Quality" | sed "s/.*Link Quality=//" | sed "s/ .*//")))
-		if [ $wifi_icon_quality -ge 65 ]; then
+		wifi_quality=$((100*$(iwconfig "${wifi}" | grep "Link Quality" | sed "s/.*Link Quality=//" | sed "s/ .*//")))
+		if [ $wifi_quality -ge 65 ]; then
 			n_bcolor="${blue}"
-		elif [ $wifi_icon_quality -ge 35 ]; then
+		elif [ $wifi_quality -ge 35 ]; then
 			n_bcolor="${green}"
 		else
 			n_bcolor="${yellow}"
 		fi
 	fi
 
-	if [ $ethernet_icon_status == "indisponible" ]; then
-		if [ $wifi_icon_status == "déconnecté" ]; then
+	if [ $ethernet_status == "indisponible" ]; then
+		if [ $wifi_status == "déconnecté" ]; then
 			nmcli dev connect "${wifi}" &
 		fi
 
-		if [ $ethernet_icon_disconnected == "1" ]; then
-			ethernet_icon_disconnected="2"
+		if [ $ethernet_disconnected == "1" ]; then
+			ethernet_disconnected="2"
 		fi
 
-	elif [ $ethernet_icon_status == "déconnecté" ]; then
+	elif [ $ethernet_status == "déconnecté" ]; then
 		n_icon="${n_icon}${disconnected_icon}"
-		if [ $wifi_icon_status == "déconnecté" ]; then
+		if [ $wifi_status == "déconnecté" ]; then
 			nmcli dev connect "${wifi}" &
 		fi
 
-		if [ $ethernet_icon_disconnected == "2" ]; then
+		if [ $ethernet_disconnected == "2" ]; then
 			nmcli dev connect "${ethernet}" &
-			ethernet_icon_disconnected="0"
+			ethernet_disconnected="0"
 		fi
-	elif [ $ethernet_icon_status == "connexion" ]; then
+	elif [ $ethernet_status == "connexion" ]; then
 		n_bcolor="${orange}"
 		n_icon="${n_icon}${ethernet_icon}"
 	
-	elif [ $ethernet_icon_status == "connecté" ]; then
+	elif [ $ethernet_status == "connecté" ]; then
 		n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
 		n_bcolor="${blue}"
+		n_fcolor="${white}"
 		n_icon="${n_icon}${ethernet_icon}"
-		if [ $wifi_icon_status == "connecté" ]; then
+		if [ $wifi_status == "connecté" ]; then
 			nmcli dev disconnect "${wifi}" &
 		fi
 
@@ -281,7 +318,7 @@ space() {
 				s_urgent=$(echo ${s_urgent} | sed 's/true //')
 			else
 				s_fcolor="${black}"
-				s_bcolor="${yellow}"
+				s_bcolor="${orange}"
 				s_urgent=$(echo ${s_urgent} | sed 's/false //')
 			fi
 
@@ -321,29 +358,24 @@ while :; do
 done &
 
 while :; do
-	echo "n_bl" > "${fifo}"
+	echo "n" > "${fifo}"
 
-	sleep 2
+	sleep 2.5
 done &
 
-while :; do
-	echo "l" > "${fifo}"
-	echo "v" > "${fifo}"
-
-	sleep 10
-done &
-
-
-window
-battery
-clock
-network
-bluetooth
-light
-volume
-space
+load() {
+	window
+	battery
+	clock
+	network
+	bluetooth
+	light
+	volume
+	space	
+}
 
 parser() {
+	load
 
 	while read -r line ; do
 		case $line in
@@ -362,7 +394,7 @@ parser() {
 				window
 			;;
 
-			b)  sleep 0.2
+			b*)  b_status=$(echo $line | sed 's/b_//' | sed 's/b/Discharging/')
 				battery
 			;;
 
@@ -388,6 +420,10 @@ parser() {
 
 			s)
 				space
+			;;
+
+			reload)
+				load
 			;;
 
 			*)
