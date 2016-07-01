@@ -60,19 +60,19 @@ acpi_entry() {
 dmesg_entry() {
 	while read -r line ; do
 		case $line in
-			n)
+			*$wifi*by*)
 				echo 'n' > "${fifo}"
 			;;
-			r8189) # Correspond to ethernet link
-				echo 'n' > "${fifo}"
-			;;
-
-			jack*) # If 
+			*$ethernet*)
 				echo 'n' > "${fifo}"
 			;;
 
-			Restarting) # Reload everything when the system restart
+			*Restarting*) # Reload everything when the system restart
 				echo 'reload' > "${fifo}"
+			;;
+
+			*"usb "*) # Detect the usb key
+				echo $line | sed 's/usb \(...\).*/u_\1/' > "${fifo}"
 			;;
 
 		esac &
@@ -85,9 +85,11 @@ xprop -spy -root _NET_ACTIVE_WINDOW | sed -un 's/.*/w/p' > "${fifo}" &
 #w_ID=$(xprop -root _NET_ACTIVE_WINDOW | sed -un 's/.* //p')
 acpi_listen | acpi_entry &
 
-#dmesg -wt | sed -u "s/.*wlp2s0.*by.*/n/" | sed -u 's/ .*//' | dmesg_entry &
+# Avoid dmesg log and 
+sudo dmesg -C && dmesg -wt | dmesg_entry &
 
 b_status=$(cat /sys/class/power_supply/BAT0/status)
+n_ping=""
 
 # Get program title
 window() {
@@ -157,9 +159,9 @@ network() {
 	n_bcolor="${red}"
 	n_fcolor="${black}"
 	n_icon=""
-	n_ping=""
 
 	if [ $wifi_status == "indisponible" ]; then
+		n_wifi_pinged=0
 		n_bcolor="${white}"
 		n_icon="${airplane_icon}"
 		if [ $ethernet_status == "déconnecté" ]; then
@@ -167,6 +169,7 @@ network() {
 		fi
 	
 	elif [ $wifi_status == "déconnecté" ]; then
+		n_wifi_pinged=0
 		n_bcolor="${black}"
 		n_fcolor="${white}"
 		if [ $ethernet_status != "connecté" ]; then
@@ -178,6 +181,7 @@ network() {
 		fi
 
 	elif [ $wifi_status == "connexion" ]; then
+		n_wifi_pinged=0
 		n_bcolor="${orange}"
 		n_icon="${wifi_icon}"
 		if [ $ethernet_status == "connecté" ]; then
@@ -186,7 +190,12 @@ network() {
 		ethernet_disconnected="1"	
 
 	elif [ $wifi_status == "connecté" ]; then
-		n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
+		if [ $n_wifi_pinged -eq 1 ]; then
+			n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
+		else
+			n_wifi_pinged=$((${n_wifi_pinged}+1))
+		fi
+
 		n_icon="${wifi_icon}"
 		wifi_quality=$((100*$(iwconfig "${wifi}" | grep "Link Quality" | sed "s/.*Link Quality=//" | sed "s/ .*//")))
 		if [ $wifi_quality -ge 65 ]; then
@@ -199,6 +208,7 @@ network() {
 	fi
 
 	if [ $ethernet_status == "indisponible" ]; then
+		n_ethernet_pinged=0
 		if [ $wifi_status == "déconnecté" ]; then
 			nmcli dev connect "${wifi}" &
 		fi
@@ -208,6 +218,7 @@ network() {
 		fi
 
 	elif [ $ethernet_status == "déconnecté" ]; then
+		n_ethernet_pinged=0
 		n_icon="${n_icon}${disconnected_icon}"
 		if [ $wifi_status == "déconnecté" ]; then
 			nmcli dev connect "${wifi}" &
@@ -218,11 +229,17 @@ network() {
 			ethernet_disconnected="0"
 		fi
 	elif [ $ethernet_status == "connexion" ]; then
+		n_ethernet_pinged=0
 		n_bcolor="${orange}"
 		n_icon="${n_icon}${ethernet_icon}"
 	
 	elif [ $ethernet_status == "connecté" ]; then
-		n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
+		if [ $n_ethernet_pinged -eq 1 ]; then
+			n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
+		else
+			n_ethernet_pinged=$((${n_ethernet_pinged}+1))
+		fi
+
 		n_bcolor="${blue}"
 		n_fcolor="${white}"
 		n_icon="${n_icon}${ethernet_icon}"
@@ -235,6 +252,7 @@ network() {
 	fi
 
 	n="F${n_bcolor}}${left}%{F${n_fcolor} B${n_bcolor}} ${n_icon}${n_ping} %{F${n_fcolor}}${left_light}%{B${n_bcolor}"
+	n_ping=""
 }
 
 
@@ -466,6 +484,10 @@ parser() {
 
 			reload)
 				load
+			;;
+
+			u_*)
+				w_title="Evénement à gérer au niveau de l'USB"
 			;;
 
 			*)
