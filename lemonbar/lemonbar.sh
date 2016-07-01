@@ -38,11 +38,19 @@ acpi_entry() {
 				echo 'l' > "${fifo}"
 			;;
 
-			ac_adapter)
+			ac_adapter*)
 				echo 'b_Discharging' > "${fifo}"
 			;;
-			battery)
+			battery*)
 				echo 'b_Charging' > "${fifo}"
+			;;
+
+			jack*)
+				if [ $(echo $line | sed 's/.* //') == "plug" ]; then
+					echo "v_jack" > "${fifo}"
+				else
+					echo "v_normal" > "${fifo}"
+				fi
 			;;
 
 		esac &
@@ -52,10 +60,14 @@ acpi_entry() {
 dmesg_entry() {
 	while read -r line ; do
 		case $line in
-			$wifi*)
+			n)
 				echo 'n' > "${fifo}"
 			;;
 			r8189) # Correspond to ethernet link
+				echo 'n' > "${fifo}"
+			;;
+
+			jack*) # If 
 				echo 'n' > "${fifo}"
 			;;
 
@@ -71,9 +83,9 @@ dmesg_entry() {
 # Spy window changement
 xprop -spy -root _NET_ACTIVE_WINDOW | sed -un 's/.*/w/p' > "${fifo}" &
 #w_ID=$(xprop -root _NET_ACTIVE_WINDOW | sed -un 's/.* //p')
-acpi_listen | sed -u 's/ .*//' | acpi_entry &
+acpi_listen | acpi_entry &
 
-#dmesg -wt | sed -u 's/ .*//' | sed -u "s/.*${wifi}.*by.*/n/" | dmesg_entry &
+#dmesg -wt | sed -u "s/.*wlp2s0.*by.*/n/" | sed -u 's/ .*//' | dmesg_entry &
 
 b_status=$(cat /sys/class/power_supply/BAT0/status)
 
@@ -294,6 +306,10 @@ volume() {
 		v_icon="${volume_muted_icon}"
 	fi
 
+	if [ $v_status == "jack" ]; then
+		v_icon="${headphones_icon}"
+	fi
+
 	v="F${v_bcolor}}%{A:pulsemixer --change-volume +5 && echo 'v' > ${fifo}:}%{A3:pulsemixer --change-volume -5 && echo 'v' > ${fifo}:}${left}%{F${v_fcolor} B${v_bcolor}} ${v_icon} ${v_level}% %{F${v_fcolor}}${left_light}%{A}%{A}%{B${v_bcolor}"
 }
 
@@ -363,6 +379,12 @@ while :; do
 	sleep 2.5
 done &
 
+while :; do
+	echo "b" > "${fifo}"
+
+	sleep 10
+done &
+
 load() {
 	window
 	battery
@@ -394,7 +416,17 @@ parser() {
 				window
 			;;
 
-			b*)  b_status=$(echo $line | sed 's/b_//' | sed 's/b/Discharging/')
+			b_Charging)
+				b_status="Charging"
+				battery
+			;;
+
+			b_Discharging)
+				b_status="Discharging"
+				battery
+			;;
+
+			b)
 				battery
 			;;
 
@@ -412,6 +444,16 @@ parser() {
 
 			l) 
 				light
+			;;
+
+			v_jack)
+				v_status="jack"
+				volume
+			;;
+
+			v_normal)
+				v_status="normal"
+				volume
 			;;
 
 			v)
