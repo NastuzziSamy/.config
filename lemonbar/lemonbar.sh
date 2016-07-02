@@ -99,11 +99,15 @@ clock() {
 	c_date=$(date +'%a %d %b' | sed -e "s/\b\(.\)/\u\1/g")
 	if [ $c_mode == "time" ]; then
 		c_time=$(date +'%H:%M')
+		c_bcolor="${white}"
+		c_fcolor="${black}"
 	else
-		c_time="$((c_chrono/60)):$((c_chrono%60))"
+		c_time="$(echo 0$((c_chrono/60%60)) | sed 's/0\(..\)/\1/'):$(echo 0$((c_chrono%60)) | sed 's/0\(..\)/\1/')"
 		c_chrono=$((c_chrono+1))
+		c_bcolor="${black}"
+		c_fcolor="${white}"
 	fi
-	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${black}}${left_light}%{B${orange} F${white}}%{A:echo 'c_' > ${fifo}:}${left}%{B${white} F${black}} ${time_icon} ${c_time}%{A}"
+	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${c_fcolor}}${left_light}%{B${orange} F${c_bcolor}}%{A:echo 'c_' > ${fifo}:}${left}%{B${c_bcolor} F${c_fcolor}} ${time_icon} ${c_time}%{A}"
 }
 
 # Get battery
@@ -422,7 +426,7 @@ done &
 load() {
 	b_status=$(cat /sys/class/power_supply/BAT0/status)
 	n_ping=""
-	c_mode="chrono"
+	c_mode="time"
 
 	window
 	battery
