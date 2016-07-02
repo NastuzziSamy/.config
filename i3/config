@@ -86,6 +86,7 @@ set $fifo "/tmp/lemonbar"
 workspace $ws+ output HDMI-1
 
 # switch to workspace
+bindsym $mod+twosuperior workspace $ws0, exec echo 's' > $fifo
 bindsym $mod+ampersand workspace $ws1, exec echo 's' > $fifo
 bindsym $mod+eacute workspace $ws2, exec echo 's' > $fifo
 bindsym $mod+quotedbl workspace $ws3, exec echo 's' > $fifo
@@ -111,6 +112,7 @@ bindsym $mod+KP_0 workspace $ws0, exec echo 's' > $fifo
 bindcode $mod+86 workspace $ws+, exec echo 's' > $fifo
 
 # move focused container to workspace
+bindsym $mod+Shift+twosuperior move container to workspace $ws0, exec echo 's' > $fifo
 bindsym $mod+Shift+ampersand move container to workspace $ws1, exec echo 's' > $fifo
 bindsym $mod+Shift+eacute move container to workspace $ws2, exec echo 's' > $fifo
 bindsym $mod+Shift+quotedbl move container to workspace $ws3, exec echo 's' > $fifo
