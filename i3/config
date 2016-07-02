@@ -86,54 +86,54 @@ set $fifo "/tmp/lemonbar"
 workspace $ws+ output HDMI-1
 
 # switch to workspace
-bindsym $mod+ampersand workspace $ws1 , exec echo 's' > $fifo
-bindsym $mod+eacute workspace $ws2 , exec echo 's' > $fifo
-bindsym $mod+quotedbl workspace $ws3 , exec echo 's' > $fifo
-bindsym $mod+apostrophe workspace $ws4 , exec echo 's' > $fifo
-bindsym $mod+parenleft workspace $ws5 , exec echo 's' > $fifo
-bindsym $mod+minus workspace $ws6 , exec echo 's' > $fifo
-bindsym $mod+egrave workspace $ws7 , exec echo 's' > $fifo
-bindsym $mod+underscore workspace $ws8 , exec echo 's' > $fifo
-bindsym $mod+ccedilla workspace $ws9 , exec echo 's' > $fifo
-bindsym $mod+agrave workspace $ws0 , exec echo 's' > $fifo
+bindsym $mod+ampersand workspace $ws1, exec echo 's' > $fifo
+bindsym $mod+eacute workspace $ws2, exec echo 's' > $fifo
+bindsym $mod+quotedbl workspace $ws3, exec echo 's' > $fifo
+bindsym $mod+apostrophe workspace $ws4, exec echo 's' > $fifo
+bindsym $mod+parenleft workspace $ws5, exec echo 's' > $fifo
+bindsym $mod+minus workspace $ws6, exec echo 's' > $fifo
+bindsym $mod+egrave workspace $ws7, exec echo 's' > $fifo
+bindsym $mod+underscore workspace $ws8, exec echo 's' > $fifo
+bindsym $mod+ccedilla workspace $ws9, exec echo 's' > $fifo
+bindsym $mod+agrave workspace $ws0, exec echo 's' > $fifo
 
 # switch to workspace
-bindsym $mod+KP_1 workspace $ws1 , exec echo 's' > $fifo
-bindsym $mod+KP_2 workspace $ws2 , exec echo 's' > $fifo
-bindsym $mod+KP_3 workspace $ws3 , exec echo 's' > $fifo
-bindsym $mod+KP_4 workspace $ws4 , exec echo 's' > $fifo
-bindsym $mod+KP_5 workspace $ws5 , exec echo 's' > $fifo
-bindsym $mod+KP_6 workspace $ws6 , exec echo 's' > $fifo
-bindsym $mod+KP_7 workspace $ws7 , exec echo 's' > $fifo
-bindsym $mod+KP_8 workspace $ws8 , exec echo 's' > $fifo
-bindsym $mod+KP_9 workspace $ws9 , exec echo 's' > $fifo
-bindsym $mod+KP_0 workspace $ws0 , exec echo 's' > $fifo
-bindcode $mod+86 workspace $ws+ , exec echo 's' > $fifo
+bindsym $mod+KP_1 workspace $ws1, exec echo 's' > $fifo
+bindsym $mod+KP_2 workspace $ws2, exec echo 's' > $fifo
+bindsym $mod+KP_3 workspace $ws3, exec echo 's' > $fifo
+bindsym $mod+KP_4 workspace $ws4, exec echo 's' > $fifo
+bindsym $mod+KP_5 workspace $ws5, exec echo 's' > $fifo
+bindsym $mod+KP_6 workspace $ws6, exec echo 's' > $fifo
+bindsym $mod+KP_7 workspace $ws7, exec echo 's' > $fifo
+bindsym $mod+KP_8 workspace $ws8, exec echo 's' > $fifo
+bindsym $mod+KP_9 workspace $ws9, exec echo 's' > $fifo
+bindsym $mod+KP_0 workspace $ws0, exec echo 's' > $fifo
+bindcode $mod+86 workspace $ws+, exec echo 's' > $fifo
 
 # move focused container to workspace
-bindsym $mod+Shift+ampersand move container to workspace $ws1 , exec echo 's' > $fifo
-bindsym $mod+Shift+eacute move container to workspace $ws2 , exec echo 's' > $fifo
-bindsym $mod+Shift+quotedbl move container to workspace $ws3 , exec echo 's' > $fifo
-bindsym $mod+Shift+apostrophe move container to workspace $ws4 , exec echo 's' > $fifo
-bindsym $mod+Shift+parenleft move container to workspace $ws5 , exec echo 's' > $fifo
-bindsym $mod+Shift+minus move container to workspace $ws6 , exec echo 's' > $fifo
-bindsym $mod+Shift+egrave move container to workspace $ws7 , exec echo 's' > $fifo
-bindsym $mod+Shift+underscore move container to workspace $ws8 , exec echo 's' > $fifo
-bindsym $mod+Shift+ccedilla move container to workspace $ws9 , exec echo 's' > $fifo
-bindsym $mod+Shift+agrave move container to workspace $ws0 , exec echo 's' > $fifo
+bindsym $mod+Shift+ampersand move container to workspace $ws1, exec echo 's' > $fifo
+bindsym $mod+Shift+eacute move container to workspace $ws2, exec echo 's' > $fifo
+bindsym $mod+Shift+quotedbl move container to workspace $ws3, exec echo 's' > $fifo
+bindsym $mod+Shift+apostrophe move container to workspace $ws4, exec echo 's' > $fifo
+bindsym $mod+Shift+parenleft move container to workspace $ws5, exec echo 's' > $fifo
+bindsym $mod+Shift+minus move container to workspace $ws6, exec echo 's' > $fifo
+bindsym $mod+Shift+egrave move container to workspace $ws7, exec echo 's' > $fifo
+bindsym $mod+Shift+underscore move container to workspace $ws8, exec echo 's' > $fifo
+bindsym $mod+Shift+ccedilla move container to workspace $ws9, exec echo 's' > $fifo
+bindsym $mod+Shift+agrave move container to workspace $ws0, exec echo 's' > $fifo
 
 # move focused container to workspace
-bindsym $mod+Shift+KP_1 move container to workspace $ws1 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_2 move container to workspace $ws2 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_3 move container to workspace $ws3 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_4 move container to workspace $ws4 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_5 move container to workspace $ws5 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_6 move container to workspace $ws6 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_7 move container to workspace $ws7 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_8 move container to workspace $ws8 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_9 move container to workspace $ws9 , exec echo 's' > $fifo
-bindsym $mod+Shift+KP_0 move container to workspace $ws0 , exec echo 's' > $fifo
-bindcode $mod+Shift+86 move container to workspace $ws+ , exec echo 's' > $fifo
+bindsym $mod+Shift+KP_1 move container to workspace $ws1, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_2 move container to workspace $ws2, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_3 move container to workspace $ws3, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_4 move container to workspace $ws4, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_5 move container to workspace $ws5, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_6 move container to workspace $ws6, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_7 move container to workspace $ws7, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_8 move container to workspace $ws8, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_9 move container to workspace $ws9, exec echo 's' > $fifo
+bindsym $mod+Shift+KP_0 move container to workspace $ws0, exec echo 's' > $fifo
+bindcode $mod+Shift+86 move container to workspace $ws+, exec echo 's' > $fifo
 
 
 
@@ -197,11 +197,11 @@ mode "resize" {
         bindsym Right resize grow width 10 px or 10 ppt
 
         # back to normal: Enter or Escape
-        bindsym Return mode "default"
-        bindsym Escape mode "default"
+        bindsym Return mode "default", exec echo "s_" > /tmp/lemonbar
+        bindsym Escape mode "default", exec echo "s_" > /tmp/lemonbar
 }
 
-bindsym $mod+r mode "resize"
+bindsym $mod+r mode "resize", exec echo "s_" > /tmp/lemonbar
 
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)

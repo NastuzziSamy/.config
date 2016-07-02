@@ -88,20 +88,22 @@ acpi_listen | acpi_entry &
 # Avoid dmesg log and 
 sudo dmesg -C && dmesg -wt | dmesg_entry &
 
-b_status=$(cat /sys/class/power_supply/BAT0/status)
-n_ping=""
-
 # Get program title
 window() {
-	#w_title=$(xprop -id $w_ID WM_NAME | sed 's/.*= "//' | sed 's/"//')
-	w_title=$(xdotool getactivewindow getwindowname || echo "ArchCuber")
+	#title=$(xprop -id $w_ID WM_NAME | sed 's/.*= "//' | sed 's/"//')
+	title=$(xdotool getactivewindow getwindowname || echo "ArchCuber")
 }
 
 # Get clock
 clock() {
 	c_date=$(date +'%a %d %b' | sed -e "s/\b\(.\)/\u\1/g")
-	c_time=$(date +'%H:%M')
-	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${black}}${left_light}%{B${orange} F${white}}${left}%{B${white} F${black}} ${time_icon} ${c_time}"
+	if [ $c_mode == "time" ]; then
+		c_time=$(date +'%H:%M')
+	else
+		c_time="$((c_chrono/60)):$((c_chrono%60))"
+		c_chrono=$((c_chrono+1))
+	fi
+	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${black}}${left_light}%{B${orange} F${white}}%{A:echo 'c_' > ${fifo}:}${left}%{B${white} F${black}} ${time_icon} ${c_time}%{A}"
 }
 
 # Get battery
@@ -134,6 +136,11 @@ battery() {
 		b_icon="${warning_icon}"
 		b_bcolor="${black}"
 		b_fcolor="${red}"
+	elif [ $b_level -le 5 ]; then
+		b_icon="${warning_icon}"
+		systemctl suspend
+	elif [ $b_level -le 10 ]; then
+		b_icon="${warning_icon}"
 	elif [ $b_level -le 25 ]; then
 		b_icon="${battery_0_icon}"
 	elif [ $b_level -le 50 ]; then
@@ -274,8 +281,8 @@ bluetooth() {
 
 # Get brightness
 light() {
-	l_maxlevel=$(cat /sys/class/backlight/intel_backlight/max_brightness)
-	l_curlevel=$(cat /sys/class/backlight/intel_backlight/brightness)
+	l_maxlevel=$(cat ${max_brightness_path})
+	l_curlevel=$(cat ${brightness_path})
 	l_level=$((100*$l_curlevel/$l_maxlevel))
 
 	if [ $l_level -le 10 ]; then
@@ -289,7 +296,7 @@ light() {
 		l_fcolor="${black}"
 	fi
 
-	l="F${l_bcolor}}%{A:sudo ~/backlight.sh + && echo 'l' > ${fifo}:}%{A3:sudo ~/backlight.sh - && echo 'l' > ${fifo}:}${left}%{F${l_fcolor} B${l_bcolor}} ${light_icon} ${l_level}% %{F${l_fcolor}}${left_light}%{A}%{A}%{B${l_bcolor}"
+	l="F${l_bcolor}}%{A:${more_brightness} && echo 'l' > ${fifo}:}%{A3:${less_brightness} && echo 'l' > ${fifo}:}${left}%{F${l_fcolor} B${l_bcolor}} ${light_icon} ${l_level}% %{F${l_fcolor}}${left_light}%{A}%{A}%{B${l_bcolor}"
 }
 
 
@@ -359,6 +366,13 @@ space() {
 			if [[ $s_focused == "true"* ]]; then
 				s_fcolor="${white}"
 				s_bcolor="${violet}"
+
+				if [ $s_mode == "" ]; then
+					workspace="${s_mode}"
+					s_fcolor="${black}"
+					s_bcolor="${red}"
+				fi
+
 				s_focused=$(echo ${s_focused} | sed 's/true //')
 			else
 				s_focused=$(echo ${s_focused} | sed 's/false //')
@@ -373,6 +387,8 @@ space() {
 				if [ $s_bcolor != $violet ]; then
 					s_bcolor="${black}"
 				fi
+			elif [ $s_bcolor == $blue ]; then
+				s_bcolor="${green}"
 			fi	
 			s="${s}%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '+ ${workspace}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right} %{F${s_fcolor}}${workspace} %{A}"
 		else
@@ -386,13 +402,13 @@ space() {
 
 
 while :; do
-	echo "w_c_s" > "${fifo}"
+	echo "c_s" > "${fifo}"
 
 	sleep 1
 done &
 
 while :; do
-	echo "n" > "${fifo}"
+	echo "n_bl" > "${fifo}"
 
 	sleep 2.5
 done &
@@ -400,10 +416,14 @@ done &
 while :; do
 	echo "b" > "${fifo}"
 
-	sleep 10
+	sleep 60
 done &
 
 load() {
+	b_status=$(cat /sys/class/power_supply/BAT0/status)
+	n_ping=""
+	c_mode="chrono"
+
 	window
 	battery
 	clock
@@ -419,8 +439,7 @@ parser() {
 
 	while read -r line ; do
 		case $line in
-			w_c_s)
-				window
+			c_s)
 				clock
 				space
 			;;
@@ -428,6 +447,20 @@ parser() {
 			n_bl)
 				network
 				bluetooth
+			;;
+
+			s)
+				space
+			;;
+
+			s_)
+				s_mode="normal"
+				space
+			;;
+
+			s_*)
+				s_mode=$(echo $line | sed 's/s_//')
+				space
 			;;
 
 			w) 
@@ -449,6 +482,17 @@ parser() {
 			;;
 
 			c) 
+				clock
+			;;
+
+			c_) 
+				if [ $c_mode == "time" ]; then
+					c_mode="chrono"
+					c_chrono=0
+				else
+					c_mode="time"
+				fi
+
 				clock
 			;;
 
@@ -478,23 +522,19 @@ parser() {
 				volume
 			;;
 
-			s)
-				space
-			;;
-
 			reload)
 				load
 			;;
 
 			u_*)
-				w_title="Evénement à gérer au niveau de l'USB"
+				title="${warning_icon} USB event detected !"
 			;;
 
 			*)
-				w_title="Erreur"
+				title="Erreur"
 			;;
 		esac
-		echo -e "%{c}%{F${white} B${black}} ${w_title} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c}  %{B- F-}"
+		echo -e "%{c}%{F${white} B${black}} %{A3:i3-msg kill:}${title}%{A} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c}  %{B- F-}"
 	done
 }
 
