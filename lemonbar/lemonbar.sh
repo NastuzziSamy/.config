@@ -13,6 +13,7 @@ fifo="/tmp/lemonbar"
 
 . ~/ressources/colors
 . ~/ressources/devices
+. ~/ressources/paths
 . ~/ressources/separators
 . ~/ressources/icons
 . ~/ressources/workspaces
@@ -67,12 +68,12 @@ dmesg_entry() {
 				echo 'n' > "${fifo}"
 			;;
 
-			*Restarting*) # Reload everything when the system restart
+			Restarting*) # Reload everything when the system restart
 				echo 'reload' > "${fifo}"
 			;;
 
-			*"usb "*) # Detect the usb key
-				echo $line | sed 's/usb \(...\).*/u_\1/' > "${fifo}"
+			"usb "*) # Detect the usb key
+				echo $line | sed 's/usb \(.\)-.*number \([0-9]*\).*/u_\1 \2/' > "${fifo}"
 			;;
 
 		esac &
@@ -85,7 +86,7 @@ xprop -spy -root _NET_ACTIVE_WINDOW | sed -un 's/.*/w/p' > "${fifo}" &
 #w_ID=$(xprop -root _NET_ACTIVE_WINDOW | sed -un 's/.* //p')
 acpi_listen | acpi_entry &
 
-# Avoid dmesg log and 
+# Avoid dmesg log and spy it
 sudo dmesg -C && dmesg -wt | dmesg_entry &
 
 # Get program title
@@ -129,17 +130,14 @@ battery() {
 	elif [ $b_level -lt 100 ]; then
 		b_bcolor="${blue}"
 		b_fcolor="${black}"
-	else
-		b_bcolor="${violet}"
-		b_fcolor="${white}"
 	fi
 
 	if [ $b_status == "Charging" ]; then
 		b_icon="${charging_icon}"
-	elif [ $b_status == "Unknown" ]; then
-		b_icon="${warning_icon}"
-		b_bcolor="${black}"
-		b_fcolor="${red}"
+	elif [ $b_status == "Full" ]; then
+		b_bcolor="${violet}"
+		b_fcolor="${white}"
+		b_icon="${battery_full_icon}"
 	elif [ $b_level -le 5 ]; then
 		b_icon="${warning_icon}"
 		systemctl suspend
@@ -154,7 +152,9 @@ battery() {
 	elif [ $b_level -lt 100 ]; then
 		b_icon="${battery_75_icon}"
 	else
-		b_icon="${battery_full_icon}"
+		b_icon="${warning_icon}"
+		b_bcolor="${black}"
+		b_fcolor="${red}"
 	fi
 
 	b="F${b_bcolor}}${left}%{F${b_fcolor} B${b_bcolor}} ${b_icon} ${b_level}% %{F${b_fcolor}}${left_light}%{B${b_bcolor}"
@@ -530,8 +530,24 @@ parser() {
 				load
 			;;
 
-			u_*)
-				title="${warning_icon} USB event detected !"
+			u_*) 
+				u_speed=$(echo $line | sed 's/u_\(.\).*/\1/')
+				u_id=$(echo $line | sed 's/.* \(.*\)/\1/')
+				sleep 0.25
+
+				if [ -z $(lsusb -s ${u_id}) ]; then
+					u_status="Disconnected"
+				else
+					u_status="Connected"
+				fi
+				
+				title="${usb_icon} USB event detected ! USB ${u_speed}.0 ID:${u_id} ${u_status}"
+				#sudo mount "${dev_path}/sdb" "${usb_mount_path}${u_speed}_${u_id}"
+			;;
+
+			usb*error*)
+				u_id=$(echo $line | sed 's/.*\([0-9]*\),.*/\1/')
+				title="${warning_icon} Erreur USB détectée (numéro ${id})"
 			;;
 
 			*)
