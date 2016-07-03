@@ -489,18 +489,17 @@ done &
 while :; do
 	echo "reload" > "${fifo}"
 
-	sleep 30
+	sleep 60
 done &
 
 u_id=""
 u_speed=""
+b_status=$(cat /sys/class/power_supply/BAT0/status)
+n_ping=""
+c_mode="time"
 u="B${black}}${right}%{F${white}}${right_light}"
 
 load() {
-	b_status=$(cat /sys/class/power_supply/BAT0/status)
-	n_ping=""
-	c_mode="time"
-
 	window
 	battery
 	clock
