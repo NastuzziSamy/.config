@@ -83,6 +83,16 @@ set $ws9 "9"
 set $ws+ "+"
 
 set $fifo "/tmp/lemonbar"
+workspace $ws0 output eDP-1
+workspace $ws1 output eDP-1
+workspace $ws2 output eDP-1
+workspace $ws3 output eDP-1
+workspace $ws4 output eDP-1
+workspace $ws5 output eDP-1
+workspace $ws6 output eDP-1
+workspace $ws7 output eDP-1
+workspace $ws8 output eDP-1
+workspace $ws9 output eDP-1
 workspace $ws+ output HDMI-1
 
 # switch to workspace
@@ -122,7 +132,7 @@ bindsym $mod+Shift+minus move container to workspace $ws6, exec echo 'w' > $fifo
 bindsym $mod+Shift+egrave move container to workspace $ws7, exec echo 'w' > $fifo
 bindsym $mod+Shift+underscore move container to workspace $ws8, exec echo 'w' > $fifo
 bindsym $mod+Shift+ccedilla move container to workspace $ws9, exec echo 'w' > $fifo
-bindsym $mod+Shift+agrave move container to workspace $ws+², exec echo 'w' > $fifo
+bindsym $mod+Shift+agrave move container to workspace $ws+, exec echo 'w' > $fifo
 
 # move focused container to workspace
 bindsym $mod+Shift+KP_1 move container to workspace $ws1, exec echo 'w' > $fifo
@@ -259,3 +269,6 @@ for_window [class="Oblogout"] fullscreen
 
 exec compton -f 
 for_window [class="^.*"] border pixel 1
+
+exec_always xrandr --noprimary
+exec_always xinput --map-to-output 11 eDP-1
