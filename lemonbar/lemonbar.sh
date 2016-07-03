@@ -33,7 +33,7 @@ acpi_entry() {
 		case $line in
 			button/*)
 				if [ $line == "button/wlan" ]; then
-					echo 'n' > "${fifo}"
+					echo 'n_' > "${fifo}"
 				else
 					echo 'v' > "${fifo}"
 				fi
@@ -137,13 +137,14 @@ battery() {
 	elif [ $b_level -lt 100 ]; then
 		b_bcolor="${blue}"
 		b_fcolor="${white}"
+	else
+		b_bcolor="${violet}"
+		b_fcolor="${white}"
 	fi
 
 	if [ $b_status == "Charging" ]; then
 		b_icon="${charging_icon}"
 	elif [ $b_status == "Full" ]; then
-		b_bcolor="${violet}"
-		b_fcolor="${white}"
 		b_icon="${battery_full_icon}"
 	elif [ $b_status == "Unknown" ]; then
 		b_icon="${warning_icon}"
@@ -348,6 +349,9 @@ workspace() {
 	w_focused=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"focused":' | sed 's/"focused":\(.*\)/\1/g' | tail)
 	w_urgent=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"urgent":' | sed 's/"urgent":\(.*\)}.*/\1/g' | tail)
 	w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
+	if [ $w_status == "disconnected" ]; then
+		w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
+	fi
 	index=0
 	w_bcolor="${white}"
 
@@ -355,10 +359,11 @@ workspace() {
 		w_bcolor_last=$w_bcolor
 		w_fcolor="${white}"
 		w_bcolor="${blue}"
+		w_icon="${workspaces[${index}]}"
 
 		if [[ $w_workspaces == *$workspace_name* ]]; then
 			if [[ $w_urgent == "true"* ]]; then
-				w_fcolor="${black}"
+				w_fcolor="${white}"
 				w_bcolor="${red}"
 				w_urgent=$(echo ${w_urgent} | sed 's/true //')
 			else
@@ -372,31 +377,36 @@ workspace() {
 				w_bcolor="${orange}"
 
 				if [ $w_mode == "" ]; then
-					workspace_name="${w_mode}"
-					w_fcolor="${black}"
+					w_icon="${w_mode}"
+					w_fcolor="${white}"
 					w_bcolor="${red}"
 				fi
 
 				w_focused=$(echo ${w_focused} | sed 's/true //')
+				w_ws_focused="${workspace_name}"
 			else
 				w_focused=$(echo ${w_focused} | sed 's/false //')
 			fi
 		fi
 
 		if [ $index -eq 0 ]; then
-			s="%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right}${right_light} %{F${w_fcolor}}${workspaces[${index}]} %{A}"
+			s="%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right}${right_light} %{F${w_fcolor}}${w_icon} %{A}"
 		elif [ $index -eq 10 ]; then
 			if [ $w_status == "disconnected" ]; then
+				xrandr --output HDM1-1 off
 				w_fcolor="${red}"
 				if [ $w_bcolor != $orange ]; then
 					w_bcolor="${black}"
 				fi
-			elif [ $w_bcolor == $blue ]; then
+			elif [ $w_bcolor == $yellow ]; then
+				xrandr --output HDMI-1 --mode 1680x1050 --pos 1920x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal
 				w_bcolor="${green}"
+			else
+				xrandr --output HDMI-1 --mode 1680x1050 --pos 1920x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal
 			fi	
-			s="${s}%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right} %{F${w_fcolor}}${workspaces[${index}]} %{A}"
+			s="${s}%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right} %{F${w_fcolor}}${w_icon} %{A}"
 		else
-			s="${s}%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right} %{F${w_fcolor}}${workspaces[${index}]} %{A}"
+			s="${s}%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right} %{F${w_fcolor}}${w_icon} %{A}"
 		fi
 		index=$((${index}+1))
 	done
@@ -482,7 +492,7 @@ done &
 
 while :; do
 	n_ping=$(fping -e www.google.com | sed 's/.*(\(.*\))/\1/')
-	if [ $n_ping == *"not known" ]; then
+	if [[ $n_ping != *" ms" ]]; then
 		n_ping=""
 	fi
 
@@ -563,7 +573,11 @@ parser() {
 			;;
 
 			n_*)
-				n_ping=$(echo $line | sed 's/n_/ /')
+				if [ $line == "n_" ]; then
+					n_ping=""
+				else
+					n_ping=$(echo $line | sed 's/n_/ /')
+				fi
 				network
 			;;
 
