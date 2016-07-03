@@ -332,19 +332,24 @@ volume() {
 
 # Get workspace information
 space() {
-	s_workspaces=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"name":"' | sed 's/"name":". \(.\)"/\1/g')
+	s_workspaces=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"name":"' | sed 's/"name":"\(.*\)"/\1/g')
 	s_focused=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"focused":' | sed 's/"focused":\(.*\)/\1/g' | tail)
 	s_urgent=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"urgent":' | sed 's/"urgent":\(.*\)}.*/\1/g' | tail)
 	s_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
 	index=0
 	s_bcolor="${white}"
 
-	for workspace in ${workspaces[@]}; do
+	echo "${s_workspaces}" > /tmp/w
+	echo "${s_focused}" > /tmp/f
+	echo "${s_urgent}" > /tmp/u
+
+	for workspace_name in ${workspace_names[@]}; do
 		s_bcolor_last=$s_bcolor
 		s_fcolor="${white}"
 		s_bcolor="${blue}"
+		echo "${workspace_name}" > /tmp/t
 
-		if [[ $s_workspaces == *$workspace* ]]; then
+		if [[ $s_workspaces == *$workspace_name* ]]; then
 			if [[ $s_urgent == "true"* ]]; then
 				s_fcolor="${black}"
 				s_bcolor="${red}"
@@ -360,7 +365,7 @@ space() {
 				s_bcolor="${orange}"
 
 				if [ $s_mode == "" ]; then
-					workspace="${s_mode}"
+					workspace_name="${s_mode}"
 					s_fcolor="${black}"
 					s_bcolor="${red}"
 				fi
@@ -372,7 +377,7 @@ space() {
 		fi
 
 		if [ $index -eq 0 ]; then
-			s="%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${index} ${workspace}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right}${right_light} %{F${s_fcolor}}${workspace} %{A}"
+			s="%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right}${right_light} %{F${s_fcolor}}${workspaces[${index}]} %{A}"
 		elif [ $index -eq 10 ]; then
 			if [ $s_status == "disconnected" ]; then
 				s_fcolor="${red}"
@@ -382,13 +387,14 @@ space() {
 			elif [ $s_bcolor == $blue ]; then
 				s_bcolor="${green}"
 			fi	
-			s="${s}%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '+ ${workspace}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right} %{F${s_fcolor}}${workspace} %{A}"
+			s="${s}%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right} %{F${s_fcolor}}${workspaces[${index}]} %{A}"
 		else
-			s="${s}%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${index} ${workspace}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right} %{F${s_fcolor}}${workspace} %{A}"
+			s="${s}%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right} %{F${s_fcolor}}${workspaces[${index}]} %{A}"
 		fi
 		index=$((${index}+1))
 	done
 	s="${s}%{F${s_bcolor}"
+	echo "${s}" > /tmp/test
 }
 
 usb_mounted() {
