@@ -22,7 +22,12 @@ fifo="/tmp/lemonbar"
 [ -e "${fifo}" ] && rm -Rf "${fifo}"
 mkfifo "${fifo}"
 
+# Initialisation
+b_status=$(cat /sys/class/power_supply/BAT0/status)	
+u="B${black}}${right}%{F${white}}${right_light}"
 
+
+# Manage ACPI information
 acpi_entry() {
 	while read -r line ; do
 		case $line in
@@ -57,6 +62,7 @@ acpi_entry() {
 	done
 }
 
+# Manage dmesg information
 dmesg_entry() {
 	while read -r line ; do
 		case $line in
@@ -81,15 +87,17 @@ dmesg_entry() {
 
 
 # Spy window changement
-xprop -spy -root _NET_ACTIVE_WINDOW | sed -un 's/.*/w/p' > "${fifo}" &
-#w_ID=$(xprop -root _NET_ACTIVE_WINDOW | sed -un 's/.* //p')
+xprop -spy -root _NET_ACTIVE_WINDOW | sed -un 's/.*/t/p' > "${fifo}" &
+
+# Listen ACPI
 acpi_listen | acpi_entry &
 
 # Avoid dmesg log and spy it
 sudo dmesg -C && dmesg -wt | dmesg_entry &
 
-# Get program title
-window() {
+
+# Get window title
+title() {
 	#title=$(xprop -id $w_ID WM_NAME | sed 's/.*= "//' | sed 's/"//')
 	title=$(xdotool getactivewindow getwindowname || echo "ArchCuber")
 }
@@ -97,15 +105,15 @@ window() {
 # Get clock
 clock() {
 	c_date=$(date +'%a %d %b' | sed -e "s/\b\(.\)/\u\1/g")
-	if [ $c_mode == "time" ]; then
-		c_time=$(date +'%H:%M')
-		c_bcolor="${white}"
-		c_fcolor="${black}"
-	else
+	if [ $c_mode == "chrono" ]; then
 		c_time="$(echo 0$((c_chrono/60%60)) | sed 's/0\(..\)/\1/'):$(echo 0$((c_chrono%60)) | sed 's/0\(..\)/\1/')"
 		c_chrono=$((c_chrono+1))
 		c_bcolor="${black}"
 		c_fcolor="${white}"
+	else
+		c_time=$(date +'%H:%M')
+		c_bcolor="${white}"
+		c_fcolor="${black}"
 	fi
 	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${c_fcolor}}${left_light}%{B${orange} F${c_bcolor}}%{A:echo 'c_' > ${fifo}:}${left}%{B${c_bcolor} F${c_fcolor}} ${time_icon} ${c_time}%{A}"
 }
@@ -137,6 +145,10 @@ battery() {
 		b_bcolor="${violet}"
 		b_fcolor="${white}"
 		b_icon="${battery_full_icon}"
+	elif [ $b_status == "Unknown" ]; then
+		b_icon="${warning_icon}"
+		b_bcolor="${black}"
+		b_fcolor="${red}"
 	elif [ $b_level -le 5 ]; then
 		b_icon="${warning_icon}"
 		systemctl suspend
@@ -331,70 +343,64 @@ volume() {
 }
 
 # Get workspace information
-space() {
-	s_workspaces=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"name":"' | sed 's/"name":"\(.*\)"/\1/g')
-	s_focused=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"focused":' | sed 's/"focused":\(.*\)/\1/g' | tail)
-	s_urgent=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"urgent":' | sed 's/"urgent":\(.*\)}.*/\1/g' | tail)
-	s_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
+workspace() {
+	w_workspaces=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"name":"' | sed 's/"name":"\(.*\)"/\1/g')
+	w_focused=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"focused":' | sed 's/"focused":\(.*\)/\1/g' | tail)
+	w_urgent=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"urgent":' | sed 's/"urgent":\(.*\)}.*/\1/g' | tail)
+	w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
 	index=0
-	s_bcolor="${white}"
-
-	echo "${s_workspaces}" > /tmp/w
-	echo "${s_focused}" > /tmp/f
-	echo "${s_urgent}" > /tmp/u
+	w_bcolor="${white}"
 
 	for workspace_name in ${workspace_names[@]}; do
-		s_bcolor_last=$s_bcolor
-		s_fcolor="${white}"
-		s_bcolor="${blue}"
-		echo "${workspace_name}" > /tmp/t
+		w_bcolor_last=$w_bcolor
+		w_fcolor="${white}"
+		w_bcolor="${blue}"
 
-		if [[ $s_workspaces == *$workspace_name* ]]; then
-			if [[ $s_urgent == "true"* ]]; then
-				s_fcolor="${black}"
-				s_bcolor="${red}"
-				s_urgent=$(echo ${s_urgent} | sed 's/true //')
+		if [[ $w_workspaces == *$workspace_name* ]]; then
+			if [[ $w_urgent == "true"* ]]; then
+				w_fcolor="${black}"
+				w_bcolor="${red}"
+				w_urgent=$(echo ${w_urgent} | sed 's/true //')
 			else
-				s_fcolor="${black}"
-				s_bcolor="${yellow}"
-				s_urgent=$(echo ${s_urgent} | sed 's/false //')
+				w_fcolor="${black}"
+				w_bcolor="${yellow}"
+				w_urgent=$(echo ${w_urgent} | sed 's/false //')
 			fi
 
-			if [[ $s_focused == "true"* ]]; then
-				s_fcolor="${black}"
-				s_bcolor="${orange}"
+			if [[ $w_focused == "true"* ]]; then
+				w_fcolor="${black}"
+				w_bcolor="${orange}"
 
-				if [ $s_mode == "" ]; then
-					workspace_name="${s_mode}"
-					s_fcolor="${black}"
-					s_bcolor="${red}"
+				if [ $w_mode == "" ]; then
+					workspace_name="${w_mode}"
+					w_fcolor="${black}"
+					w_bcolor="${red}"
 				fi
 
-				s_focused=$(echo ${s_focused} | sed 's/true //')
+				w_focused=$(echo ${w_focused} | sed 's/true //')
 			else
-				s_focused=$(echo ${s_focused} | sed 's/false //')
+				w_focused=$(echo ${w_focused} | sed 's/false //')
 			fi
 		fi
 
 		if [ $index -eq 0 ]; then
-			s="%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right}${right_light} %{F${s_fcolor}}${workspaces[${index}]} %{A}"
+			s="%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right}${right_light} %{F${w_fcolor}}${workspaces[${index}]} %{A}"
 		elif [ $index -eq 10 ]; then
-			if [ $s_status == "disconnected" ]; then
-				s_fcolor="${red}"
-				if [ $s_bcolor != $orange ]; then
-					s_bcolor="${black}"
+			if [ $w_status == "disconnected" ]; then
+				w_fcolor="${red}"
+				if [ $w_bcolor != $orange ]; then
+					w_bcolor="${black}"
 				fi
-			elif [ $s_bcolor == $blue ]; then
-				s_bcolor="${green}"
+			elif [ $w_bcolor == $blue ]; then
+				w_bcolor="${green}"
 			fi	
-			s="${s}%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right} %{F${s_fcolor}}${workspaces[${index}]} %{A}"
+			s="${s}%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right} %{F${w_fcolor}}${workspaces[${index}]} %{A}"
 		else
-			s="${s}%{B${s_bcolor} F${s_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 's' > ${fifo}:}%{F${s_bcolor_last}}${right} %{F${s_fcolor}}${workspaces[${index}]} %{A}"
+			s="${s}%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right} %{F${w_fcolor}}${workspaces[${index}]} %{A}"
 		fi
 		index=$((${index}+1))
 	done
-	s="${s}%{F${s_bcolor}"
-	echo "${s}" > /tmp/test
+	s="${s}%{F${w_bcolor}"
 }
 
 usb_mounted() {
@@ -469,7 +475,7 @@ usb() {
 
 
 while :; do
-	echo "c_s" > "${fifo}"
+	echo "c_w" > "${fifo}"
 
 	sleep 1
 done &
@@ -492,22 +498,15 @@ while :; do
 	sleep 60
 done &
 
-u_id=""
-u_speed=""
-b_status=$(cat /sys/class/power_supply/BAT0/status)
-n_ping=""
-c_mode="time"
-u="B${black}}${right}%{F${white}}${right_light}"
-
 load() {
-	window
+	title
 	battery
 	clock
 	network
 	bluetooth
 	light
 	volume
-	space
+	workspace
 }
 
 parser() {
@@ -515,27 +514,27 @@ parser() {
 
 	while read -r line ; do
 		case $line in
-			c_s)
+			c_w)
 				clock
-				space
+				workspace
 			;;
 
-			s)
-				space
+			w)
+				workspace
 			;;
 
-			s_)
-				s_mode="normal"
-				space
+			w_)
+				w_mode="normal"
+				workspace
 			;;
 
-			s_*)
-				s_mode=$(echo $line | sed 's/s_//')
-				space
+			w_*)
+				w_mode=$(echo $line | sed 's/w_//')
+				workspace
 			;;
 
-			w) 
-				window
+			t) 
+				title
 			;;
 
 			b_Charging)
@@ -545,10 +544,6 @@ parser() {
 
 			b_Discharging)
 				b_status="Discharging"
-				battery
-			;;
-
-			b)
 				battery
 			;;
 
@@ -615,6 +610,10 @@ parser() {
 			usb*error*)
 				u_id=$(echo $line | sed 's/.*\([0-9]*\),.*/\1/')
 				title="${warning_icon} Erreur USB détectée (numéro ${id})"
+			;;
+
+			b)
+				battery
 			;;
 
 			*)
