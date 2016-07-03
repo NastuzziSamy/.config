@@ -2,7 +2,6 @@
 
 # Detect if it's already launched. Restart i3 and itself if detected
 if [ $(pgrep -cx $(basename $0)) -gt 1 ] ; then
-	i3-msg restart 
 	killall -g /bin/bash
 fi
 
@@ -119,7 +118,7 @@ battery() {
 		b_bcolor="${red}"
 		b_fcolor="${white}"
 	elif [ $b_level -le 40 ]; then
-		b_bcolor="${maroon}"
+		b_bcolor="${brown}"
 		b_fcolor="${white}"
 	elif [ $b_level -le 60 ]; then
 		b_bcolor="${yellow}"
@@ -129,7 +128,7 @@ battery() {
 		b_fcolor="${black}"
 	elif [ $b_level -lt 100 ]; then
 		b_bcolor="${blue}"
-		b_fcolor="${black}"
+		b_fcolor="${white}"
 	fi
 
 	if [ $b_status == "Charging" ]; then
@@ -172,7 +171,6 @@ network() {
 	n_icon=""
 
 	if [ $wifi_status == "indisponible" ]; then
-		n_wifi_pinged=0
 		n_bcolor="${white}"
 		n_icon="${airplane_icon}"
 		if [ $ethernet_status == "déconnecté" ]; then
@@ -180,7 +178,6 @@ network() {
 		fi
 	
 	elif [ $wifi_status == "déconnecté" ]; then
-		n_wifi_pinged=0
 		n_bcolor="${black}"
 		n_fcolor="${white}"
 		if [ $ethernet_status != "connecté" ]; then
@@ -192,7 +189,6 @@ network() {
 		fi
 
 	elif [ $wifi_status == "connexion" ]; then
-		n_wifi_pinged=0
 		n_bcolor="${orange}"
 		n_icon="${wifi_icon}"
 		if [ $ethernet_status == "connecté" ]; then
@@ -201,25 +197,23 @@ network() {
 		ethernet_disconnected="1"	
 
 	elif [ $wifi_status == "connecté" ]; then
-		if [ $n_wifi_pinged -eq 1 ]; then
-			n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
-		else
-			n_wifi_pinged=$((${n_wifi_pinged}+1))
-		fi
-
 		n_icon="${wifi_icon}"
 		wifi_quality=$((100*$(iwconfig "${wifi}" | grep "Link Quality" | sed "s/.*Link Quality=//" | sed "s/ .*//")))
 		if [ $wifi_quality -ge 65 ]; then
 			n_bcolor="${blue}"
+			n_fcolor="${white}"
 		elif [ $wifi_quality -ge 35 ]; then
 			n_bcolor="${green}"
 		else
 			n_bcolor="${yellow}"
 		fi
+
+		if [ -z $n_ping ]; then
+			n_ping="${warning_icon}"
+		fi
 	fi
 
 	if [ $ethernet_status == "indisponible" ]; then
-		n_ethernet_pinged=0
 		if [ $wifi_status == "déconnecté" ]; then
 			nmcli dev connect "${wifi}" &
 		fi
@@ -229,7 +223,6 @@ network() {
 		fi
 
 	elif [ $ethernet_status == "déconnecté" ]; then
-		n_ethernet_pinged=0
 		n_icon="${n_icon}${disconnected_icon}"
 		if [ $wifi_status == "déconnecté" ]; then
 			nmcli dev connect "${wifi}" &
@@ -240,17 +233,10 @@ network() {
 			ethernet_disconnected="0"
 		fi
 	elif [ $ethernet_status == "connexion" ]; then
-		n_ethernet_pinged=0
 		n_bcolor="${orange}"
 		n_icon="${n_icon}${ethernet_icon}"
 	
 	elif [ $ethernet_status == "connecté" ]; then
-		if [ $n_ethernet_pinged -eq 1 ]; then
-			n_ping=$(ping www.google.com -c 1 | grep "time=" | sed "s/.*time=/ /")
-		else
-			n_ethernet_pinged=$((${n_ethernet_pinged}+1))
-		fi
-
 		n_bcolor="${blue}"
 		n_fcolor="${white}"
 		n_icon="${n_icon}${ethernet_icon}"
@@ -258,12 +244,14 @@ network() {
 			nmcli dev disconnect "${wifi}" &
 		fi
 
+		if [ -z $n_ping ]; then
+			n_ping="${warning_icon}"
+		fi
 	else
 		n_bcolor="${red}"
 	fi
 
 	n="F${n_bcolor}}${left}%{F${n_fcolor} B${n_bcolor}} ${n_icon}${n_ping} %{F${n_fcolor}}${left_light}%{B${n_bcolor}"
-	n_ping=""
 }
 
 
@@ -279,7 +267,7 @@ bluetooth() {
 		blight_icon="${bluetooth_on_icon}"
 	fi
 
-	bl="F${bl_color}}${left}%{F${black} B${bl_color}} ${blight_icon} %{F${black}}${left_light}%{B${bl_color}"
+	bl="F${bl_color}}${left}%{F${white} B${bl_color}} ${blight_icon} %{F${white}}${left_light}%{B${bl_color}"
 }
 
 
@@ -290,7 +278,7 @@ light() {
 	l_level=$((100*$l_curlevel/$l_maxlevel))
 
 	if [ $l_level -le 10 ]; then
-		l_bcolor="${maroon}"
+		l_bcolor="${brown}"
 		l_fcolor="${white}"
 	elif [ $l_level -ge 90 ]; then
 		l_bcolor="${violet}"
@@ -330,7 +318,7 @@ volume() {
 		v_fcolor="${black}"
 		v_icon="${volume_low_icon}"
 	else
-		v_bcolor="${maroon}"
+		v_bcolor="${brown}"
 		v_fcolor="${white}"
 		v_icon="${volume_muted_icon}"
 	fi
@@ -352,7 +340,7 @@ space() {
 	s_bcolor="${white}"
 
 	for workspace in ${workspaces[@]}; do
-		s_bcolor_last="${s_bcolor}"
+		s_bcolor_last=$s_bcolor
 		s_fcolor="${white}"
 		s_bcolor="${blue}"
 
@@ -363,13 +351,13 @@ space() {
 				s_urgent=$(echo ${s_urgent} | sed 's/true //')
 			else
 				s_fcolor="${black}"
-				s_bcolor="${orange}"
+				s_bcolor="${yellow}"
 				s_urgent=$(echo ${s_urgent} | sed 's/false //')
 			fi
 
 			if [[ $s_focused == "true"* ]]; then
-				s_fcolor="${white}"
-				s_bcolor="${violet}"
+				s_fcolor="${black}"
+				s_bcolor="${orange}"
 
 				if [ $s_mode == "" ]; then
 					workspace="${s_mode}"
@@ -388,7 +376,7 @@ space() {
 		elif [ $index -eq 10 ]; then
 			if [ $s_status == "disconnected" ]; then
 				s_fcolor="${red}"
-				if [ $s_bcolor != $violet ]; then
+				if [ $s_bcolor != $orange ]; then
 					s_bcolor="${black}"
 				fi
 			elif [ $s_bcolor == $blue ]; then
@@ -400,8 +388,77 @@ space() {
 		fi
 		index=$((${index}+1))
 	done
+	s="${s}%{F${s_bcolor}"
+}
 
-	s="${s}%{B${black} F${s_bcolor}}${right}%{B- F-}${right_light}"
+usb_mounted() {
+	if [ -z $(pmount | grep "${u_name}") ]; then
+		if [ $u_status == "Mounted" ]; then
+			title="USB démontée"
+		else
+			title="USB connectée"
+		fi
+
+		u_status="Connected"
+		if [ $u_speed == 3 ]; then
+			u_bcolor="${orange}"
+			u_fcolor="${black}"
+		else
+			u_bcolor="${yellow}"
+			u_fcolor="${black}"
+		fi
+
+		if [ -z $(lsblk | grep "${u_name}[0-9]") ]; then
+			u_command="pmount ${dev_path}/${u_name} && echo 'u' > ${fifo}"
+		else
+			u_command="pmount -D ${dev_path}/${u_name} && echo 'u' > ${fifo}"
+		fi
+	else		
+		u_status="Mounted"
+		if [ $u_speed == 3 ]; then
+			u_bcolor="${violet}"
+		else
+			u_bcolor="${blue}"
+		fi
+
+		if [ -z $(lsblk | grep "${u_name}[0-9]") ]; then
+			u_command="pumount ${dev_path}/${u_name} && echo 'u' > ${fifo}"
+		else
+			u_command="pumount -D ${dev_path}/${u_name} && echo 'u' > ${fifo}"
+		fi
+
+		title="USB montée"
+	fi
+
+	u="B${u_bcolor}}${right}%{F${u_fcolor}}${right_light} %{B${u_bcolor}}%{A:${u_command}:}${usb_icon} %{B${black} F${u_bcolor}}${right}%{B- F-}${right_light} %{A}"
+}
+
+# Get USB information /!\ Work only with one USB key
+usb() {
+	u_bcolor="${black}"
+	u_fcolor="${white}"
+
+	sleep 0.5
+
+	if [ -z $u_id ]; then
+		usb_mounted
+	elif [ -z $(lsusb -s ${u_id}) ]; then
+		if [ $u_status == "Mounted" ]; then
+			u_bcolor="${red}"
+			u="B${u_bcolor}}${right}%{F${u_fcolor}}${right_light} %{B${u_bcolor}}%{A:echo 'u' > ${fifo}:}${usb_icon} %{B${black} F${u_bcolor}}${right}%{B- F-}${right_light} %{A}"
+			title="${warning_icon} USB déconnectée sans avoir été démontée"
+		else
+			u="B${u_bcolor}}${right}%{F${u_fcolor}}${right_light}"
+			title="USB déconnectée"
+		fi
+		u_status="Disconnected"
+	else
+		sleep 1.5
+		u_info=$(lsblk | grep "sd. " | tail -n -1)
+		u_name=$(echo $u_info | awk '{ print $1 }')
+		usb_mounted
+	fi
+
 }
 
 
@@ -412,16 +469,26 @@ while :; do
 done &
 
 while :; do
-	echo "n_bl" > "${fifo}"
+	n_ping=$(fping -e www.google.com | sed 's/.*(\(.*\))/\1/')
+	if [ $n_ping == *"not known" ]; then
+		n_ping=""
+	fi
 
-	sleep 2.5
+	echo "n_${n_ping}" > "${fifo}"
+	echo "bl" > "${fifo}"
+
+	sleep 2
 done &
 
 while :; do
-	echo "b" > "${fifo}"
+	echo "reload" > "${fifo}"
 
-	sleep 60
+	sleep 30
 done &
+
+u_id=""
+u_speed=""
+u="B${black}}${right}%{F${white}}${right_light}"
 
 load() {
 	b_status=$(cat /sys/class/power_supply/BAT0/status)
@@ -435,7 +502,7 @@ load() {
 	bluetooth
 	light
 	volume
-	space	
+	space
 }
 
 parser() {
@@ -446,11 +513,6 @@ parser() {
 			c_s)
 				clock
 				space
-			;;
-
-			n_bl)
-				network
-				bluetooth
 			;;
 
 			s)
@@ -500,6 +562,11 @@ parser() {
 				clock
 			;;
 
+			n_*)
+				n_ping=$(echo $line | sed 's/n_/ /')
+				network
+			;;
+
 			n) 
 				network
 			;;
@@ -530,19 +597,14 @@ parser() {
 				load
 			;;
 
+			u) 
+				usb
+			;;
+
 			u_*) 
 				u_speed=$(echo $line | sed 's/u_\(.\).*/\1/')
 				u_id=$(echo $line | sed 's/.* \(.*\)/\1/')
-				sleep 0.25
-
-				if [ -z $(lsusb -s ${u_id}) ]; then
-					u_status="Disconnected"
-				else
-					u_status="Connected"
-				fi
-				
-				title="${usb_icon} USB event detected ! USB ${u_speed}.0 ID:${u_id} ${u_status}"
-				#sudo mount "${dev_path}/sdb" "${usb_mount_path}${u_speed}_${u_id}"
+				usb
 			;;
 
 			usb*error*)
@@ -554,7 +616,7 @@ parser() {
 				title="Erreur"
 			;;
 		esac
-		echo -e "%{c}%{F${white} B${black}} %{A3:i3-msg kill:}${title}%{A} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c}  %{B- F-}"
+		echo -e "%{c}%{F${white} B${black}} %{A3:i3-msg kill:}${title}%{A} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} ${u} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c}  %{B- F-}"
 	done
 }
 
