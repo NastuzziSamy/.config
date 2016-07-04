@@ -25,7 +25,7 @@ mkfifo "${fifo}"
 # Initialisation
 b_status=$(cat /sys/class/power_supply/BAT0/status)	
 u="B${black}}${right}%{F${white}}${right_light}"
-
+w_out="0"
 
 # Manage ACPI information
 acpi_entry() {
@@ -50,7 +50,7 @@ acpi_entry() {
 				echo 'b_Charging' > "${fifo}"
 			;;
 
-			jack*)
+			jack/headphone*)
 				if [ $(echo $line | sed 's/.* //') == "plug" ]; then
 					echo "v_jack" > "${fifo}"
 				else
@@ -78,7 +78,9 @@ dmesg_entry() {
 			;;
 
 			"usb "*) # Detect the usb key
-				echo $line | sed 's/usb \(.\)-.*number \([0-9]*\).*/u_\1 \2/' > "${fifo}"
+				if [[ $line != *"full-speed"* ]]; then
+					echo $line | sed 's/usb \(.\)-.*number \([0-9]*\).*/u_\1 \2/' > "${fifo}"
+				fi
 			;;
 
 		esac &
@@ -146,10 +148,6 @@ battery() {
 		b_icon="${charging_icon}"
 	elif [ $b_status == "Full" ]; then
 		b_icon="${battery_full_icon}"
-	elif [ $b_status == "Unknown" ]; then
-		b_icon="${warning_icon}"
-		b_bcolor="${black}"
-		b_fcolor="${red}"
 	elif [ $b_level -le 5 ]; then
 		b_icon="${warning_icon}"
 		systemctl suspend
@@ -163,6 +161,8 @@ battery() {
 		b_icon="${battery_50_icon}"
 	elif [ $b_level -lt 100 ]; then
 		b_icon="${battery_75_icon}"
+	elif [ $b_level -eq 100 ]; then
+		b_icon="${battery_full_icon}"
 	else
 		b_icon="${warning_icon}"
 		b_bcolor="${black}"
@@ -351,6 +351,9 @@ workspace() {
 	w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
 	if [ $w_status == "disconnected" ]; then
 		w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
+		if [ $w_status == "disconnected" ]; then
+			w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
+		fi
 	fi
 	index=0
 	w_bcolor="${white}"
@@ -393,16 +396,34 @@ workspace() {
 			s="%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right}${right_light} %{F${w_fcolor}}${w_icon} %{A}"
 		elif [ $index -eq 10 ]; then
 			if [ $w_status == "disconnected" ]; then
-				xrandr --output HDM1-1 off
 				w_fcolor="${red}"
 				if [ $w_bcolor != $orange ]; then
 					w_bcolor="${black}"
 				fi
+				if [ $w_out == "1" ]; then
+					xrandr --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
+					w_out="0"
+				fi
+			elif [[ $w_workspaces == *"out"* ]]; then
+				w_bcolor="${orange}"
 			elif [ $w_bcolor == $yellow ]; then
-				xrandr --output HDMI-1 --mode 1680x1050 --pos 1920x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal
 				w_bcolor="${green}"
+				if [ $w_out == "1" ]; then
+					xrandr --output HDMI-1 --mode 1680x1050 --pos 1920x30 --rotate normal --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
+					w_out="0"
+				else
+					feh --bg-scale ~/images/background.png
+				fi
 			else
-				xrandr --output HDMI-1 --mode 1680x1050 --pos 1920x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal
+				if [ $w_out == "0" ]; then
+					i3-msg workspace out
+					xrandr --output HDMI-1 --primary --mode 1680x1050 --pos 136x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
+					i3-msg workspace +
+					w_out="1"
+				else
+					title="Affichage extérieur"
+				fi
+				xrandr --output HDMI-1 --primary --mode 1680x1050 --pos 136x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
 			fi	
 			s="${s}%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right} %{F${w_fcolor}}${w_icon} %{A}"
 		else
@@ -499,7 +520,7 @@ while :; do
 	echo "n_${n_ping}" > "${fifo}"
 	echo "bl" > "${fifo}"
 
-	sleep 2
+	sleep 2.5
 done &
 
 while :; do
@@ -562,11 +583,11 @@ parser() {
 			;;
 
 			c_) 
-				if [ $c_mode == "time" ]; then
+				if [ $c_mode == "chrono" ]; then
+					c_mode="time"
+				else
 					c_mode="chrono"
 					c_chrono=0
-				else
-					c_mode="time"
 				fi
 
 				clock
@@ -634,7 +655,8 @@ parser() {
 				title="Erreur"
 			;;
 		esac
-		echo -e "%{c}%{F${white} B${black}} %{A3:i3-msg kill:}${title}%{A} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} ${u} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c}  %{B- F-}"
+
+		echo -e "%{c}%{F${white} B${black}} %{A3:i3-msg kill:}${title}%{A} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} ${u} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c} %{B- F-}" # %{S$(((${w_out}+1)%2))}%{c}Espace de travail non utilisée"
 	done
 }
 
