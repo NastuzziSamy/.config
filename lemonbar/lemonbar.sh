@@ -5,7 +5,7 @@ if [ $(pgrep -cx $(basename $0)) -gt 1 ] ; then
 	killall -g /bin/bash
 fi
 
-trap 'trap - TERM; kill 0' INT TERM QUIT EXIT
+#trap 'trap - TERM; kill 0' INT TERM QUIT EXIT
 
 # Variables
 fifo="/tmp/lemonbar"
@@ -25,18 +25,21 @@ mkfifo "${fifo}"
 # Initialisation
 b_status=$(cat /sys/class/power_supply/BAT0/status)	
 u="B${black}}${right}%{F${white}}${right_light}"
-w_out="0"
+w_out=1
+c_mode="time"
+v_status="normal"
+w_mode="normal"
 
 # Manage ACPI information
 acpi_entry() {
 	while read -r line ; do
 		case $line in
+			button/wlan*)
+				echo 'n_' > "${fifo}"
+			;;
+
 			button/*)
-				if [ $line == "button/wlan" ]; then
-					echo 'n_' > "${fifo}"
-				else
-					echo 'v' > "${fifo}"
-				fi
+				echo 'v' > "${fifo}"
 			;;
 
 			video*)
@@ -113,11 +116,16 @@ clock() {
 		c_bcolor="${black}"
 		c_fcolor="${white}"
 	else
-		c_time=$(date +'%H:%M')
+		#c_time=$(date +'%R')
+		c_time=$(date +'%I:%M')
 		c_bcolor="${white}"
 		c_fcolor="${black}"
 	fi
-	c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${c_fcolor}}${left_light}%{B${orange} F${c_bcolor}}%{A:echo 'c_' > ${fifo}:}${left}%{B${c_bcolor} F${c_fcolor}} ${time_icon} ${c_time}%{A}"
+	if [ -z $(date +'%P') ]; then
+		c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${c_fcolor}}${left_light}%{B${orange} F${c_bcolor}}%{A:echo 'c_' > ${fifo}:}${left}%{B${c_bcolor} F${c_fcolor}} ${time_AM_icon} ${c_time} %{A}"
+	else
+		c="F${orange}}${left}%{B${orange} F${black}} ${date_icon} ${c_date} %{F${c_fcolor}}${left_light}%{B${orange} F${c_bcolor}}%{A:echo 'c_' > ${fifo}:}${left}%{B${c_bcolor} F${c_fcolor}} ${time_icon} ${c_time} %{A}"
+	fi
 }
 
 # Get battery
@@ -220,8 +228,7 @@ network() {
 		else
 			n_bcolor="${yellow}"
 		fi
-
-		if [ -z $n_ping ]; then
+		if [ -z "${n_ping}" ]; then
 			n_ping="${warning_icon}"
 		fi
 	fi
@@ -256,8 +263,7 @@ network() {
 		if [ $wifi_status == "connecté" ]; then
 			nmcli dev disconnect "${wifi}" &
 		fi
-
-		if [ -z $n_ping ]; then
+		if [ -z "${n_ping}" ]; then
 			n_ping="${warning_icon}"
 		fi
 	else
@@ -343,18 +349,15 @@ volume() {
 	v="F${v_bcolor}}%{A:pulsemixer --change-volume +5 && echo 'v' > ${fifo}:}%{A3:pulsemixer --change-volume -5 && echo 'v' > ${fifo}:}${left}%{F${v_fcolor} B${v_bcolor}} ${v_icon} ${v_level}% %{F${v_fcolor}}${left_light}%{A}%{A}%{B${v_bcolor}"
 }
 
+out() {
+	o_status=$(xrandr | grep HDMI-1 | sed 's/HDMI-1 \(\w*\).*/\1/')
+}
+
 # Get workspace information
 workspace() {
 	w_workspaces=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"name":"' | sed 's/"name":"\(.*\)"/\1/g')
 	w_focused=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"focused":' | sed 's/"focused":\(.*\)/\1/g' | tail)
 	w_urgent=$(i3-msg -t get_workspaces | tr "," "\n" | grep '"urgent":' | sed 's/"urgent":\(.*\)}.*/\1/g' | tail)
-	w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
-	if [ $w_status == "disconnected" ]; then
-		w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
-		if [ $w_status == "disconnected" ]; then
-			w_status=$(xrandr | grep ${hdmi} | sed "s/${hdmi} \(\w*\).*/\1/")
-		fi
-	fi
 	index=0
 	w_bcolor="${white}"
 
@@ -395,33 +398,32 @@ workspace() {
 		if [ $index -eq 0 ]; then
 			s="%{B${w_bcolor} F${w_fcolor}}%{A:i3-msg workspace '${workspace_name}' && echo 'w' > ${fifo}:}%{F${w_bcolor_last}}${right}${right_light} %{F${w_fcolor}}${w_icon} %{A}"
 		elif [ $index -eq 10 ]; then
-			if [ $w_status == "disconnected" ]; then
+			if [ $o_status == "disconnected" ]; then
 				w_fcolor="${red}"
 				if [ $w_bcolor != $orange ]; then
 					w_bcolor="${black}"
-				fi
-				if [ $w_out == "1" ]; then
-					xrandr --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
-					w_out="0"
+				else
+					xrandr --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal
+					w_out=0
 				fi
 			elif [[ $w_workspaces == *"out"* ]]; then
 				w_bcolor="${orange}"
+					xrandr --output HDMI-1 --primary --mode 1680x1050 --pos 136x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
 			elif [ $w_bcolor == $yellow ]; then
 				w_bcolor="${green}"
-				if [ $w_out == "1" ]; then
+				if [ $w_out -eq 1 ]; then
 					xrandr --output HDMI-1 --mode 1680x1050 --pos 1920x30 --rotate normal --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
-					w_out="0"
+					w_out=0
 				else
 					feh --bg-scale ~/images/background.png
 				fi
 			else
-				if [ $w_out == "0" ]; then
+				if [ $w_out -eq 0 ]; then
+					xrandr --output HDMI-1
 					i3-msg workspace out
 					xrandr --output HDMI-1 --primary --mode 1680x1050 --pos 136x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
 					i3-msg workspace +
-					w_out="1"
-				else
-					title="Affichage extérieur"
+					w_out=1
 				fi
 				xrandr --output HDMI-1 --primary --mode 1680x1050 --pos 136x30 --rotate normal --output eDP-1 --mode 1920x1080 --pos 0x0 --rotate normal && xinput --map-to-output 11 eDP-1
 			fi	
@@ -512,13 +514,9 @@ while :; do
 done &
 
 while :; do
-	n_ping=$(fping -e www.google.com | sed 's/.*(\(.*\))/\1/')
-	if [[ $n_ping != *" ms" ]]; then
-		n_ping=""
-	fi
-
-	echo "n_${n_ping}" > "${fifo}"
-	echo "bl" > "${fifo}"
+	n_ping=$(fping -e www.google.com | tail -n 1 | sed 's/.*\((.*)\)/\1/' | sed 's/(\(.*\))/\1/')
+	#n_ping=$(ping -W 500 -c 1 www.google.com | grep 'time=' | sed 's/.*time=//')
+	echo "o_bl_n_${n_ping}" > "${fifo}"
 
 	sleep 2.5
 done &
@@ -537,6 +535,7 @@ load() {
 	bluetooth
 	light
 	volume
+	out
 	workspace
 }
 
@@ -557,6 +556,10 @@ parser() {
 			w_)
 				w_mode="normal"
 				workspace
+			;;
+
+			o)
+				out
 			;;
 
 			w_*)
@@ -593,12 +596,15 @@ parser() {
 				clock
 			;;
 
-			n_*)
-				if [ $line == "n_" ]; then
-					n_ping=""
-				else
-					n_ping=$(echo $line | sed 's/n_/ /')
-				fi
+			n_)
+				n_ping=""
+				network
+			;;
+
+			o_bl_n_*)
+				out
+				bluetooth
+				n_ping=$(echo $line | sed 's/o_bl_n_/ /')
 				network
 			;;
 
@@ -652,11 +658,11 @@ parser() {
 			;;
 
 			*)
-				title="Erreur"
+				title="Erreur: ${line}"
 			;;
 		esac
 
-		echo -e "%{c}%{F${white} B${black}} %{A3:i3-msg kill:}${title}%{A} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} ${u} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c} %{B- F-}" # %{S$(((${w_out}+1)%2))}%{c}Espace de travail non utilisée"
+		echo "%{c}%{F${white} B${black}} %{A3:i3-msg kill:}${title}%{A} %{l}%{B${white} F${black}}%{A:oblogout:}  %{B- F-}%{A}${s} ${u} %{r}${left_light}%{B- ${v} ${l} ${bl} ${n} ${b} ${c} %{B- F-}"
 	done
 }
 
