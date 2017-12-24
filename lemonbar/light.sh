@@ -4,10 +4,11 @@ light() {
 	l_curlevel=$(cat $brightness_path)
 	l_level=$((100*$l_curlevel/$l_maxlevel))
 
-	if [ $l_level -le 10 ]; then
+	if [ $l_level -eq 0 ]; then
 		l_bcolor=$brown
 		l_fcolor=$white
-	elif [ $l_level -ge 90 ]; then
+		# xgamma -rgamma 0.1 ?
+	elif [ $l_level -eq 100 ]; then
 		l_bcolor=$violet
 		l_fcolor=$white
 	else

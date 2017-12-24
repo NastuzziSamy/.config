@@ -10,13 +10,9 @@ volume() {
 		v_bcolor=$red
 		v_fcolor=$white
 		v_icon=$volume_muted_icon
-	elif [ $v_level -eq 150 ]; then
+	elif [ $v_level -ge 100 ]; then
 		v_bcolor=$violet
 		v_fcolor=$white
-		v_icon=$volume_high_icon
-	elif [ $v_level -ge 100 ]; then
-		v_bcolor=$white
-		v_fcolor=$black
 		v_icon=$volume_high_icon
 	elif [ $v_level -ge 50 ]; then
 		v_bcolor=$white

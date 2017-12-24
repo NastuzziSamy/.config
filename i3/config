@@ -23,13 +23,18 @@ floating_modifier $mod
 
 # start a terminal
 bindsym $mod+BackSpace exec terminology
+bindsym $mod+Shift+BackSpace exec sudo terminology
+bindcode $mod+37 exec echo 's_toggle' > /tmp/lemonbar
 
 # kill focused window
-bindsym $mod+Delete kill
 bindcode $mod+64 kill
+bindcode $mod+Shift+64 focus parent, kill
 
 # start dmenu (a program launcher)
-bindsym $mod+Return exec dmenu_run
+bindsym $mod+Return exec rofi -show run -lines 5 -eh 2 -width 35 -padding 50 -opacity "15" -bw 0 -bc "#383C4A" -bg "#383C4A" -fg "#F7F7F7" -hlbg "#383C4A" -hlfg "#5294E2" -font "System San Francisco Display 13"
+bindcode $mod+104 exec rofi -show run -lines 5 -eh 2 -width 35 -padding 50 -opacity "15" -bw 0 -bc "#383C4A" -bg "#383C4A" -fg "#F7F7F7" -hlbg "#383C4A" -hlfg "#5294E2" -font "System San Francisco Display 13"
+bindsym $mod+Shift+Return exec sudo rofi -show run -lines 5 -eh 2 -width 35 -padding 50 -opacity "15" -bw 0 -bc "#383C4A" -bg "#383C4A" -fg "#F7F7F7" -hlbg "#383C4A" -hlfg "#5294E2" -font "System San Francisco Display 13"
+bindcode $mod+Shift+104 exec sudo rofi -show run -lines 5 -eh 2 -width 35 -padding 50 -opacity "15" -bw 0 -bc "#383C4A" -bg "#383C4A" -fg "#F7F7F7" -hlbg "#383C4A" -hlfg "#5294E2" -font "System San Francisco Display 13"
 
 # change focus
 bindsym $mod+Left focus left
@@ -93,104 +98,72 @@ workspace $ws6 output eDP-1
 workspace $ws7 output eDP-1
 workspace $ws8 output eDP-1
 workspace $ws9 output eDP-1
+workspace out output eDP-1
 workspace $ws+ output HDMI-1
 
 # switch to workspace
-bindsym $mod+twosuperior workspace $ws0, exec echo 'w' > $fifo
-bindsym $mod+ampersand workspace $ws1, exec echo 'w' > $fifo
-bindsym $mod+eacute workspace $ws2, exec echo 'w' > $fifo
-bindsym $mod+quotedbl workspace $ws3, exec echo 'w' > $fifo
-bindsym $mod+apostrophe workspace $ws4, exec echo 'w' > $fifo
-bindsym $mod+parenleft workspace $ws5, exec echo 'w' > $fifo
-bindsym $mod+minus workspace $ws6, exec echo 'w' > $fifo
-bindsym $mod+egrave workspace $ws7, exec echo 'w' > $fifo
-bindsym $mod+underscore workspace $ws8, exec echo 'w' > $fifo
-bindsym $mod+ccedilla workspace $ws9, exec echo 'w' > $fifo
-bindsym $mod+agrave workspace $ws+, exec echo 'w' > $fifo
+bindsym $mod+twosuperior exec echo 'w' > $fifo, workspace $ws0
+bindsym $mod+ampersand exec echo 'w' > $fifo, workspace $ws1
+bindsym $mod+eacute exec echo 'w' > $fifo, workspace $ws2
+bindsym $mod+quotedbl exec echo 'w' > $fifo, workspace $ws3
+bindsym $mod+apostrophe exec echo 'w' > $fifo, workspace $ws4
+bindsym $mod+parenleft exec echo 'w' > $fifo, workspace $ws5
+bindsym $mod+minus exec echo 'w' > $fifo, workspace $ws6
+bindsym $mod+egrave exec echo 'w' > $fifo, workspace $ws7
+bindsym $mod+underscore exec echo 'w' > $fifo, workspace $ws8
+bindsym $mod+ccedilla exec echo 'w' > $fifo, workspace $ws9
+bindsym $mod+agrave exec echo 'w' > $fifo, workspace $ws+
 
 # switch to workspace
-bindsym $mod+KP_1 workspace $ws1, exec echo 'w' > $fifo
-bindsym $mod+KP_2 workspace $ws2, exec echo 'w' > $fifo
-bindsym $mod+KP_3 workspace $ws3, exec echo 'w' > $fifo
-bindsym $mod+KP_4 workspace $ws4, exec echo 'w' > $fifo
-bindsym $mod+KP_5 workspace $ws5, exec echo 'w' > $fifo
-bindsym $mod+KP_6 workspace $ws6, exec echo 'w' > $fifo
-bindsym $mod+KP_7 workspace $ws7, exec echo 'w' > $fifo
-bindsym $mod+KP_8 workspace $ws8, exec echo 'w' > $fifo
-bindsym $mod+KP_9 workspace $ws9, exec echo 'w' > $fifo
-bindsym $mod+KP_0 workspace $ws0, exec echo 'w' > $fifo
-bindcode $mod+86 workspace $ws+, exec echo 'w' > $fifo
+bindsym $mod+KP_1 exec echo 'w' > $fifo, workspace $ws1
+bindsym $mod+KP_2 exec echo 'w' > $fifo, workspace $ws2
+bindsym $mod+KP_3 exec echo 'w' > $fifo, workspace $ws3
+bindsym $mod+KP_4 exec echo 'w' > $fifo, workspace $ws4
+bindsym $mod+KP_5 exec echo 'w' > $fifo, workspace $ws5
+bindsym $mod+KP_6 exec echo 'w' > $fifo, workspace $ws6
+bindsym $mod+KP_7 exec echo 'w' > $fifo, workspace $ws7
+bindsym $mod+KP_8 exec echo 'w' > $fifo, workspace $ws8
+bindsym $mod+KP_9 exec echo 'w' > $fifo, workspace $ws9
+bindsym $mod+KP_0 exec echo 'w' > $fifo, workspace $ws0
+bindcode $mod+86 exec echo 'w' > $fifo, workspace $ws+
 
 # move focused container to workspace
-bindsym $mod+Shift+twosuperior move container to workspace $ws0, exec echo 'w' > $fifo
-bindsym $mod+Shift+ampersand move container to workspace $ws1, exec echo 'w' > $fifo
-bindsym $mod+Shift+eacute move container to workspace $ws2, exec echo 'w' > $fifo
-bindsym $mod+Shift+quotedbl move container to workspace $ws3, exec echo 'w' > $fifo
-bindsym $mod+Shift+apostrophe move container to workspace $ws4, exec echo 'w' > $fifo
-bindsym $mod+Shift+parenleft move container to workspace $ws5, exec echo 'w' > $fifo
-bindsym $mod+Shift+minus move container to workspace $ws6, exec echo 'w' > $fifo
-bindsym $mod+Shift+egrave move container to workspace $ws7, exec echo 'w' > $fifo
-bindsym $mod+Shift+underscore move container to workspace $ws8, exec echo 'w' > $fifo
-bindsym $mod+Shift+ccedilla move container to workspace $ws9, exec echo 'w' > $fifo
-bindsym $mod+Shift+agrave move container to workspace $ws+, exec echo 'w' > $fifo
+bindsym $mod+Shift+twosuperior exec echo 'w' > $fifo, move container to workspace $ws0
+bindsym $mod+Shift+ampersand exec echo 'w' > $fifo, move container to workspace $ws1
+bindsym $mod+Shift+eacute exec echo 'w' > $fifo, move container to workspace $ws2
+bindsym $mod+Shift+quotedbl exec echo 'w' > $fifo, move container to workspace $ws3
+bindsym $mod+Shift+apostrophe exec echo 'w' > $fifo, move container to workspace $ws4
+bindsym $mod+Shift+parenleft exec echo 'w' > $fifo, move container to workspace $ws5
+bindsym $mod+Shift+minus exec echo 'w' > $fifo, move container to workspace $ws6
+bindsym $mod+Shift+egrave exec echo 'w' > $fifo, move container to workspace $ws7
+bindsym $mod+Shift+underscore exec echo 'w' > $fifo, move container to workspace $ws8
+bindsym $mod+Shift+ccedilla exec echo 'w' > $fifo, move container to workspace $ws9
+bindsym $mod+Shift+agrave exec echo 'w' > $fifo, move container to workspace $ws+
 
 # move focused container to workspace
-bindsym $mod+Shift+KP_1 move container to workspace $ws1, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_2 move container to workspace $ws2, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_3 move container to workspace $ws3, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_4 move container to workspace $ws4, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_5 move container to workspace $ws5, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_6 move container to workspace $ws6, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_7 move container to workspace $ws7, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_8 move container to workspace $ws8, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_9 move container to workspace $ws9, exec echo 'w' > $fifo
-bindsym $mod+Shift+KP_0 move container to workspace $ws0, exec echo 'w' > $fifo
-bindcode $mod+Shift+86 move container to workspace $ws+, exec echo 'w' > $fifo
-
-
+bindsym $mod+Shift+KP_1 exec echo 'w' > $fifo, move container to workspace $ws1
+bindsym $mod+Shift+KP_2 exec echo 'w' > $fifo, move container to workspace $ws2
+bindsym $mod+Shift+KP_3 exec echo 'w' > $fifo, move container to workspace $ws3
+bindsym $mod+Shift+KP_4 exec echo 'w' > $fifo, move container to workspace $ws4
+bindsym $mod+Shift+KP_5 exec echo 'w' > $fifo, move container to workspace $ws5
+bindsym $mod+Shift+KP_6 exec echo 'w' > $fifo, move container to workspace $ws6
+bindsym $mod+Shift+KP_7 exec echo 'w' > $fifo, move container to workspace $ws7
+bindsym $mod+Shift+KP_8 exec echo 'w' > $fifo, move container to workspace $ws8
+bindsym $mod+Shift+KP_9 exec echo 'w' > $fifo, move container to workspace $ws9
+bindsym $mod+Shift+KP_0 exec echo 'w' > $fifo, move container to workspace $ws0
+bindcode $mod+Shift+86 exec echo 'w' > $fifo, move container to workspace $ws+
 
 # reload the configuration file
 #bindsym $mod+Tab reload 
 
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
-bindsym $mod+Shift+Tab restart
+bindsym $mod+Shift+Tab exec killall -g /bin/bash, restart
 
-mode "Que voulez-vous faire ?" {
-
-    bindsym space exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
-    bindsym BackSpace exec i3-msg exit, mode "default", exec twmnc --id 0 --remote hide
-    bindsym Tab exec i3lock-fancy, exec systemctl suspend, mode "default", exec twmnc --id 0 --remote hide
-    bindsym $mod+Return exec reboot, mode "default", exec twmnc --id 0 --remote hide
-    bindsym Return exec poweroff, mode "default", exec twmnc --id 0 --remote hide
-
-    # back to normal: Escape
-    bindsym Escape mode "default", exec twmnc --id 0 --remote hide
-}
 # launch stop menu
-bindcode $mod+37 exec oblogout
-
-
-mode "Etes vous-sûr de vouloir vérouiller votre ordinateur ?" {
-    bindsym Return exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
-    bindsym $mod+Pause exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
-    bindsym $mod+Home exec i3lock-fancy, mode "default", exec twmnc --id 0 --remote hide
-    bindsym Escape mode "default", exec twmnc --id 0 --remote hide
-}
-bindsym $mod+Pause exec twmnc --id 0 -t "Etes vous-sûr de vouloir vérouiller votre ordinateur ?" -c "Entrée pour vérouiller" -d 60000, mode "Etes vous-sûr de vouloir vérouiller votre ordinateur ?"
-bindsym $mod+Home exec twmnc --id 0 -t "Etes vous-sûr de vouloir vérouiller votre ordinateur ?" -c "Entrée pour vérouiller" -d 60000, mode "Etes vous-sûr de vouloir vérouiller votre ordinateur ?"
-
-
-mode "Etes vous-sûr de vouloir éteindre votre ordinateur ?" {
-    bindsym Return exec poweroff, mode "default", exec twmnc --id 0 --remote hide
-    bindsym $mod+Pause exec poweroff, mode "default", exec twmnc --id 0 --remote hide
-    bindsym $mod+End exec poweroff, mode "default", exec twmnc --id 0 --remote hide
-    bindsym Escape mode "default", exec twmnc --id 0 --remote hide
-}
-bindsym $mod+End exec twmnc --id 0 -t "Etes vous-sûr de vouloir éteindre votre ordinateur ?" -c "Entrée pour éteindre" -d 60000, mode "Etes vous-sûr de vouloir éteindre votre ordinateur ?"
-
+bindsym $mod+Escape exec oblogout
 
 # exit i3 (logs you out of your X session)
-bindsym $mod+Escape exec "i3-nagbar -t warning -m 'Voulez-vous réellement quitter i3 ? Vous serez redirigé vers lightdm' -b 'Oui, quitter' 'i3-msg exit'"
+#bindcode $mod+37 exec "i3-nagbar -t warning -m 'Voulez-vous réellement quitter i3 ? Vous serez redirigé vers lightdm' -b 'Oui, quitter' 'i3-msg exit'"
 
 
 
@@ -238,37 +211,59 @@ bar {
 
 
 assign [class="Conky"] $ws0
+assign [class="Firefox"] $ws2
+assign [class="Gimp"] $ws6
+assign [class="Vlc"] $ws7
+assign [class="Audacious"] $ws8
+assign [class="Atom"] $ws3
+assign [class="Slack"] $ws9
+assign [class="Thunderbird"] $ws9
+assign [class="Messenger"] $ws9
 
 exec numlockx on
-exec_always feh --bg-scale /home/geometrum/images/background.png
+exec_always feh --bg-scale /home/geometrum/Images/background.png
 exec --no-startup-id twmnd
 
-# exec --no-startup-id /home/geometrum/lock.sh
-exec --no-startup-id i3lock -i /home/geometrum/images/background.png
+exec --no-startup-id /home/geometrum/Documents/scripts/lock.sh
 
 exec --no-startup-id sudo pacman -Rns $(pacman -Qtdq) --noconfirm &
-exec --no-startup-id sudo pacman -Syu --noconfirm &
-exec --no-startup-id sudo pacman -Sc --noconfirm &
+#exec --no-startup-id sudo pacman -Syu --noconfirm &
+#exec --no-startup-id sudo pacman -Sc --noconfirm &
 
-exec --no-startup-id i3-msg 'workspace $ws2; exec terminology; workspace $ws0; exec conky'
+exec --no-startup-id i3-msg 'workspace $ws4; exec nautilus; workspace $ws2; exec firefox; workspace $ws1; exec terminology; workspace $ws9; exec thunderbird; exec slack; exec messengerfordesktop; workspace $ws0; exec --no-startup-id terminology -e sudo htop -s PERCENT_MEM'
 
 exec "twmnc \\"Bienvenu, $USER\\""
 
-bindsym Print exec scrot ~/images/screenshots
+#bindsym Print exec scrot ~/Images/screenshots
+#bindsym --release Print exec --no-startup-id scrot ~/Images/screenshots
 
 bindsym XF86AudioMute exec pulsemixer --toggle-mute && echo 'v' > /tmp/lemonbar
 bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -5 && echo 'v' > /tmp/lemonbar
 bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +5 && echo 'v' > /tmp/lemonbar
 
-bindsym XF86MonBrightnessUp exec sudo ~/scripts/backlight.sh + && echo 'l' > /tmp/lemonbar
-bindsym XF86MonBrightnessDown exec sudo ~/scripts/backlight.sh - && echo 'l' > /tmp/lemonbar
+bindsym $mod+XF86AudioMute exec audacious -t
+bindsym $mod+XF86AudioLowerVolume exec audacious -r
+bindsym $mod+XF86AudioRaiseVolume exec audacious -f
 
-exec touchegg &
+bindsym XF86MonBrightnessUp exec sudo ~/Documents/scripts/backlight.sh + && echo 'l' > /tmp/lemonbar
+bindsym XF86MonBrightnessDown exec sudo ~/Documents/scripts/backlight.sh - && echo 'l' > /tmp/lemonbar
+
+exec_always touchegg &
 
 for_window [class="Oblogout"] fullscreen
 
-exec compton -f 
+# exec compton -f 
 for_window [class="^.*"] border pixel 1
 
-exec_always xrandr --noprimary
-exec_always xinput --map-to-output 11 eDP-1
+for_window [window_role="pop-up"] floating enable
+for_window [window_role="task_dialog"] floating enable
+for_window [title="Preferences$"] floating enable
+
+bindsym $mod+p exec echo 'c_toogle' > /tmp/lemonbar
+bindsym --release Print exec --no-startup-id scrot ~/Images/screenshots/%Y-%m-%d_%H-%M-%S.png
+bindsym --release $mod+Print exec --no-startup-id scrot -s ~/Images/screenshots/%Y-%m-%d_%H-%M-%S.png
+
+exec_always xrandr --output HDMI-1 --off --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --rotate normal
+exec hwclock --systohc
+exec synclient TapButton1=1
+exec ntpd -q

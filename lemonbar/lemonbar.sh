@@ -7,14 +7,15 @@ fi
 
 
 # Variables
-. ~/ressources/colors
-. ~/ressources/devices
-. ~/ressources/paths
-. ~/ressources/separators
-. ~/ressources/icons
-. ~/ressources/workspaces
+. ~/Documents/ressources/colors
+. ~/Documents/ressources/devices
+. ~/Documents/ressources/paths
+. ~/Documents/ressources/separators
+. ~/Documents/ressources/icons
+. ~/Documents/ressources/workspaces
 
 fifo_bar='/tmp/lemonbar'
+max_title=100
 
 
 # Creation of the fifo_bar file
@@ -35,8 +36,8 @@ mkfifo $fifo_bar
 
 # Manage ACPI information
 acpi_entry() {
-	while read -r line ; do
-		case $line in
+	while read -r info ; do
+		case $info in
 			button/wlan*)
 				echo 'n_' > $fifo_bar
 			;;
@@ -50,14 +51,16 @@ acpi_entry() {
 			;;
 
 			ac_adapter*)
-				echo 'b_0' > $fifo_bar
+				sleep 1;
+				echo 'b' > $fifo_bar
 			;;
 			battery*)
-				echo 'b_1' > $fifo_bar
+				sleep 1;
+				echo 'b' > $fifo_bar
 			;;
 
 			jack/headphone*)
-				if [ $(echo $line | sed 's/.* //') == 'plug' ]; then
+				if [ $(echo $info | sed 's/.* //') == 'plug' ]; then
 					echo 'v_1' > $fifo_bar
 				else
 					echo 'v_0' > $fifo_bar
@@ -71,8 +74,8 @@ acpi_entry() {
 
 # Manage dmesg information
 dmesg_entry() {
-	while read -r line ; do
-		case $line in
+	while read -r info ; do
+		case $info in
 			*$wifi*by*)
 				echo 'n' > $fifo_bar
 			;;
@@ -85,8 +88,8 @@ dmesg_entry() {
 			;;
 
 			'usb '*) # Detect the usb key
-				if [[ $line != *'full-speed'* && $line != 'usb 1'* ]]; then
-					echo $line | sed 's/usb \(.\)-[0-9]*: .*number \([0-9]*\).*/u_\1 \2/' > $fifo_bar
+				if [[ $info != *'full-speed'* && $info != 'usb 1'* ]]; then
+					echo $info | sed 's/usb \(.\)-[0-9]*: .*number \([0-9]*\).*/u_\1 \2/' > $fifo_bar
 				fi
 			;;
 
@@ -114,7 +117,7 @@ while :; do
 	if [ $n_ping -eq 0 ]; then
 		n_info=''
 	else
-		n_info=$(fping -e www.google.com | tail -n 1 | sed 's/.*\((.*)\)/\1/' | sed 's/(\(.*\))/\1/')
+		n_info=$(fping -e www.google.com | tail -n 1 | sed 's/.*\((.*)\)/\1/' | sed 's/(\(.*\))/\1/' | sed "s/.*www.google.com.*//")
 		#n_info=$(ping -W 500 -c 1 www.google.com | grep 'time=' | sed 's/.*time=//')
 	fi
 
@@ -132,9 +135,9 @@ done &
 
 load() {
 	workspace &
+	network &
 	battery
 	clock
-	network &
 	bluetooth
 	light
 	volume
@@ -144,17 +147,17 @@ load() {
 parser() {
 	load
 
-	while read -r line ; do
+	while read -r info ; do
 		title=$(xdotool getactivewindow getwindowname || echo 'ArchCuber')
 
-		case $line in
+		case $info in
 			c_w)
 				clock
 				workspace &
 			;;
 
 			info_w_*)
-				w=$(echo $line | sed 's/info_w_//')' '
+				w=$(echo $info | sed 's/info_w_//')' '
 			;;
 
 			w)
@@ -167,7 +170,7 @@ parser() {
 			;;
 
 			w_*)
-				w_mode=$(echo $line | sed 's/w_//')
+				w_mode=$(echo $info | sed 's/w_//')
 				workspace &
 			;;
 
@@ -177,21 +180,21 @@ parser() {
 				else 
 					n_ping=0
 				fi
-				network
+				network &
 			;;
 
 			n_*)
-				n_info=$(echo $line | sed 's/n_/ /')
+				n_info=$(echo $info | sed 's/n_/ /')
 				network &
 			;;
 
 			info_n_*)
-				n=$(echo $line | sed 's/info_n_//')' '
+				n=$(echo $info | sed 's/info_n_//')' '
 			;;
 
 			n_)
 				n_info=''
-				network
+				network &
 			;;
 
 			n) 
@@ -220,16 +223,6 @@ parser() {
 				volume
 			;;
 
-			b_1)
-				b_status='Charging'
-				battery
-			;;
-
-			b_0)
-				b_status='Discharging'
-				battery
-			;;
-
 			reload)
 				load
 			;;
@@ -239,22 +232,26 @@ parser() {
 			;;
 
 			u_*) 
-				u_speed=$(echo $line | sed 's/u_\(.\).*/\1/')
-				u_id=$(echo $line | sed 's/.* \(.*\)/\1/')
+				u_speed=$(echo $info | sed 's/u_\(.\).*/\1/')
+				u_id=$(echo $info | sed 's/.* \(.*\)/\1/')
 				usb
 			;;
 
 			usb*error*)
-				u_id=$(echo $line | sed 's/.* \(.*\)/\1/')
+				u_id=$(echo $info | sed 's/.* \(.*\)/\1/')
 				title=$warning_icon' Erreur USB détectée (numéro '$id')'
 			;;
 
+			b)
+				battery
+			;;
 			b_toogle)
 				if [ $b_time -eq 0 ]; then
 					b_time=1
 				else 
 					b_time=0
 				fi
+
 				battery
 			;;
 
@@ -271,7 +268,6 @@ parser() {
 			c_toogle) 
 				if [ $c_mode -eq 0 ]; then
 					c_mode=1
-					c_chrono=0
 				else
 					c_mode=0
 				fi
@@ -279,16 +275,32 @@ parser() {
 				clock
 			;;
 
+			c_reset) 
+				c_chrono=0
+			;;
+
+			info_)
+				title=$(echo $info | sed 's/info_//')
+			;;
+
+			error_)
+				title=$(echo $error | sed 's/info_/'$warning_icon' /')
+			;;
+
 			*)
-				title='Erreur: '$line
+				title='Erreur: '$info
 			;;
 		esac
 
-		echo '%{c}%{F'$white' B'$black'} %{A3:i3-msg kill:}'$title'%{A} %{l}%{B'$white' F'$black'}%{A:oblogout:}  %{B- F-}%{A}'$w$u' %{r}'$left_light'%{B- '$v$l$bl$n$b$c' %{B- F-}'
+		if [ ${#title} -gt $max_title ]; then
+			title=$(echo $title | cut -c 1-$max_title | sed 's/[ -]* [^ ]*$//')
+		fi
+
+		echo '%{+u}%{c}%{F'$white' B'$black'} %{A3:i3-msg kill:}'$title'%{A} %{-u}%{l}%{B'$white' F'$black'}%{A:oblogout:}  %{B- F-}%{A}'$w' B#FF383C4A}'$right'%{O2}%{F#FF383C4A B-}'$right$right_light' %{r}%{F#FF383C4A}'$left_light$left'%{B#FF383C4A}%{O2}%{'$v$l$n$b$c' %{B- F-}'
 	done
 }
 
 
-tail -f $fifo_bar | parser | lemonbar -p -F $white -B $black -f 'Source Code Pro-9' -f 'Source Code Pro-10' -f 'FontAwesome-11' | bash
+tail -f $fifo_bar | parser | lemonbar -p -F $white -B $black -U '#FF383C4A' -u 2 -f 'Source Code Pro-9' -f 'Source Code Pro-10' -f 'FontAwesome-11' | bash
 
 wait

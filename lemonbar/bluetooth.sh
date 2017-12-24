@@ -7,7 +7,7 @@ bluetooth() {
 		bl_icon=$bluetooth_off_icon
 	else
 		bl_color=$blue
-		bl_icon=$bluetooth_on_icon}
+		bl_icon=$bluetooth_on_icon
 	fi
 
 	bl='F'$bl_color'}'$left'%{F'$white' B'$bl_color'} '$bl_icon' %{F'$white'}'$left_light'%{B'$bl_color' '
